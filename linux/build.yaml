@@ -1,0 +1,10 @@
+targets:
+  linux:
+    builders:
+      stk_min_plugin:
+        enabled: false  # Disable default CMake
+    sources:
+      - build.sh
+    generate_for:
+      - linux
+

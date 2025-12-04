@@ -1,0 +1,14 @@
+//
+//  Generated file. Do not edit.
+//
+
+import FlutterMacOS
+import Foundation
+
+import path_provider_foundation
+import stk_min
+
+func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
+  PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
+  StkMinPlugin.register(with: registry.registrar(forPlugin: "StkMinPlugin"))
+}
