@@ -8,7 +8,6 @@ issue_tracker: https://github.com/shashankkhare/stk_min/issues
 topics:
   - audio
   - synthesis
-  - music
   - stk
   - physical-modeling
   - ffi
@@ -21,6 +20,7 @@ dependencies:
   flutter:
     sdk: flutter
   ffi: ^2.0.0
+  plugin_platform_interface: ^2.1.0
 
 dev_dependencies:
   flutter_test:
