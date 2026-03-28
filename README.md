@@ -36,7 +36,7 @@ flutter pub get
 
 ## Usage
 
-### Basic Example
+### Usage Example
 
 ```dart
 import 'package:stk_min/stk_min.dart';
@@ -169,17 +169,17 @@ final samples = modalBar.render(44100);
 
 The `controlChange(int number, double value)` method accepts the following parameters (values 0-128):
 
-#### Flute Control Changes:
+#### Flute Control Changes
 
 | Parameter | Control # | Description |
-|-----------|-----------|-------------|
+| :--- | :--- | :--- |
 | Vibrato Gain | 1 | Depth of pitch vibrato (0 = none, 128 = maximum) |
 | Jet Delay | 2 | Tone color/brightness (lower = brighter, higher = darker) |
 | Noise Gain | 4 | Breath noise amount (adds realism) |
 | Vibrato Frequency | 11 | Speed of vibrato oscillation |
 | Breath Pressure | 128 | Overall breath pressure envelope |
 
-#### Saxophone Control Changes:
+#### Saxophone Control Changes
 
 | Parameter | Control # | Description |
 |-----------|-----------|-------------|
@@ -189,10 +189,10 @@ The `controlChange(int number, double value)` method accepts the following param
 | Vibrato Frequency | 11 | Speed of vibrato oscillation |
 | Breath Pressure | 128 | Overall breath pressure envelope |
 
-#### Shakers Control Changes:
+#### Shakers Control Changes
 
 | Parameter | Control # | Description |
-|-----------|-----------|-------------|
+| :--- | :--- | :--- |
 | Shake Energy | 2 | Intensity of the shake |
 | System Decay | 4 | How fast the sound fades out |
 | Number Of Objects | 11 | Number of shaking objects (e.g., beads in maraca) |
@@ -208,6 +208,7 @@ The `controlChange(int number, double value)` method accepts the following param
 | Vibrato Gain | 1 | Depth of pitch vibrato |
 | Vibrato Frequency | 11 | Speed of vibrato oscillation |
 | Preset | 16 | Switch between instruments (Marimba, Vibraphone, Agogo, etc.) |
+
 
 
 ### Complete Example with Audio Playback

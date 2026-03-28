@@ -8,14 +8,14 @@
 
 * **Percussion Expansion**: Added `ModalBar` instrument with presets for **Agogo** (African percussion), Marimba, Vibraphone, and more.
 * **Drummer Enhancements**:
-  - Added `setPitch` support for real-time playback rate adjustment.
-  - Fixed frequency mapping bug ("shouting" sample issue).
+  * Added `setPitch` support for real-time playback rate adjustment.
+  * Fixed frequency mapping bug ("shouting" sample issue).
 * **Native Stability**:
-  - Implemented lazy initialization for all instruments to prevent startup crashes when STK rawwave paths are not yet set.
-  - Improved memory management with pointer usage for native instruments.
+  * Implemented lazy initialization for all instruments to prevent startup crashes when STK rawwave paths are not yet set.
+  * Improved memory management with pointer usage for native instruments.
 * **Example App Update**: 
-  - Comprehensive tabbed UI with 5 sections (Flute, Sax, Shakers, Drums, Percussion).
-  - Added controls for pitch, stick hardness, and preset selection.
+  * Comprehensive tabbed UI with 5 sections (Flute, Sax, Shakers, Drums, Percussion).
+  * Added controls for pitch, stick hardness, and preset selection.
 * **FFI Improvements**: Expanded native bridge and updated CMake configurations for all platforms.
 
 ## 0.2.0 (Skipped/Internal)
