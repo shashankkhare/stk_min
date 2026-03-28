@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.3.1
+
+* **SEO Optimization**: Updated package description with targeted keywords (physical modeling, percussion, FFI) to improve search discoverability on pub.dev.
+
 ## 0.3.0
 
 * **Percussion Expansion**: Added `ModalBar` instrument with presets for **Agogo** (African percussion), Marimba, Vibraphone, and more.
