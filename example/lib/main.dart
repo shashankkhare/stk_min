@@ -2,29 +2,40 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:stk_min/stk_min.dart';
+import 'package:stk_min/saxophone.dart';
+import 'package:stk_min/shakers.dart';
+import 'package:stk_min/drummer.dart';
+import 'dart:math';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 void main() {
-  runApp(const FluteDemo());
+  runApp(const StkDemoApp());
 }
 
-class FluteDemo extends StatefulWidget {
-  const FluteDemo({super.key});
+class StkDemoApp extends StatelessWidget {
+  const StkDemoApp({super.key});
 
   @override
-  State<FluteDemo> createState() => _FluteDemoState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
+      home: const StkDemoHome(),
+    );
+  }
 }
 
-class _FluteDemoState extends State<FluteDemo> {
-  double _frequency = 440.0;
-  double _pressure = 0.8;
-  double _vibratoGain = 20.0;      // Control #1 (0-128)
-  double _vibratoFreq = 60.0;      // Control #11 (0-128)
-  double _noiseGain = 20.0;        // Control #4 (0-128)
-  double _jetDelay = 60.0;         // Control #2 (0-128)
-  bool _isPlaying = false;
-  
-  final plugin = Flute();
+class StkDemoHome extends StatefulWidget {
+  const StkDemoHome({super.key});
+
+  @override
+  State<StkDemoHome> createState() => _StkDemoHomeState();
+}
+
+class _StkDemoHomeState extends State<StkDemoHome> {
   SoLoud? _soloud;
   bool _audioInitialized = false;
 
@@ -38,142 +49,12 @@ class _FluteDemoState extends State<FluteDemo> {
     try {
       _soloud = SoLoud.instance;
       await _soloud!.init();
+      // Set rawwave path for Drummer
+      setRawwavePath('/home/shashankkhare/AndroidStudioProjects/stk_min/rawwaves/');
       setState(() => _audioInitialized = true);
     } catch (e) {
       debugPrint('Failed to initialize audio: $e');
     }
-  }
-
-  /// Create a WAV file from PCM float samples
-  Uint8List _createWavFile(List<double> samples, int sampleRate) {
-    final numSamples = samples.length;
-    final numChannels = 1;
-    final bitsPerSample = 16;
-    final byteRate = sampleRate * numChannels * bitsPerSample ~/ 8;
-    final blockAlign = numChannels * bitsPerSample ~/ 8;
-    final dataSize = numSamples * numChannels * bitsPerSample ~/ 8;
-    
-    final buffer = ByteData(44 + dataSize);
-    var offset = 0;
-    
-    // RIFF header
-    buffer.setUint8(offset++, 0x52); // 'R'
-    buffer.setUint8(offset++, 0x49); // 'I'
-    buffer.setUint8(offset++, 0x46); // 'F'
-    buffer.setUint8(offset++, 0x46); // 'F'
-    buffer.setUint32(offset, 36 + dataSize, Endian.little); offset += 4;
-    buffer.setUint8(offset++, 0x57); // 'W'
-    buffer.setUint8(offset++, 0x41); // 'A'
-    buffer.setUint8(offset++, 0x56); // 'V'
-    buffer.setUint8(offset++, 0x45); // 'E'
-    
-    // fmt chunk
-    buffer.setUint8(offset++, 0x66); // 'f'
-    buffer.setUint8(offset++, 0x6D); // 'm'
-    buffer.setUint8(offset++, 0x74); // 't'
-    buffer.setUint8(offset++, 0x20); // ' '
-    buffer.setUint32(offset, 16, Endian.little); offset += 4; // fmt chunk size
-    buffer.setUint16(offset, 1, Endian.little); offset += 2; // audio format (PCM)
-    buffer.setUint16(offset, numChannels, Endian.little); offset += 2;
-    buffer.setUint32(offset, sampleRate, Endian.little); offset += 4;
-    buffer.setUint32(offset, byteRate, Endian.little); offset += 4;
-    buffer.setUint16(offset, blockAlign, Endian.little); offset += 2;
-    buffer.setUint16(offset, bitsPerSample, Endian.little); offset += 2;
-    
-    // data chunk
-    buffer.setUint8(offset++, 0x64); // 'd'
-    buffer.setUint8(offset++, 0x61); // 'a'
-    buffer.setUint8(offset++, 0x74); // 't'
-    buffer.setUint8(offset++, 0x61); // 'a'
-    buffer.setUint32(offset, dataSize, Endian.little); offset += 4;
-    
-    // PCM data (convert float to 16-bit int)
-    for (var sample in samples) {
-      final intSample = (sample * 32767).clamp(-32768, 32767).toInt();
-      buffer.setInt16(offset, intSample, Endian.little);
-      offset += 2;
-    }
-    
-    return buffer.buffer.asUint8List();
-  }
-
-  Future<void> _playSingleNote() async {
-    if (_isPlaying || !_audioInitialized) return;
-
-    setState(() => _isPlaying = true);
-
-    try {
-      // Initialize and trigger the note
-      plugin.init(_frequency);
-      
-      // Apply control changes for realistic sound
-      plugin.controlChange(1, _vibratoGain);   // Vibrato gain
-      plugin.controlChange(11, _vibratoFreq);  // Vibrato frequency
-      plugin.controlChange(4, _noiseGain);     // Noise gain (breath noise)
-      plugin.controlChange(2, _jetDelay);      // Jet delay
-      
-      plugin.noteOn(_frequency, _pressure);
-
-      // Generate audio samples (1 second at 44100 Hz)
-      const sampleRate = 44100;
-      const duration = 1;
-      final samples = plugin.render(sampleRate * duration);
-      
-      // Create WAV file from samples
-      final wavData = _createWavFile(samples, sampleRate);
-      
-      // Load and play
-      final source = await _soloud!.loadMem('flute_note', wavData);
-      await _soloud!.play(source);
-      
-      // Wait for playback to finish
-      await Future.delayed(Duration(seconds: duration));
-      
-      // Dispose the source
-      await _soloud!.disposeSource(source);
-    } catch (e) {
-      debugPrint('Error playing note: $e');
-    }
-
-    setState(() => _isPlaying = false);
-  }
-
-  Future<void> _playMelody() async {
-    if (_isPlaying || !_audioInitialized) return;
-    setState(() => _isPlaying = true);
-
-    List<double> notes = [440, 494, 523, 587, 659, 698, 784, 880];
-    const sampleRate = 44100;
-    const noteDuration = 0.4;
-    final samplesPerNote = (sampleRate * noteDuration).toInt();
-
-    try {
-      for (var freq in notes) {
-        plugin.init(freq);
-        
-        // Apply control changes
-        plugin.controlChange(1, _vibratoGain);
-        plugin.controlChange(11, _vibratoFreq);
-        plugin.controlChange(4, _noiseGain);
-        plugin.controlChange(2, _jetDelay);
-        
-        plugin.noteOn(freq, _pressure);
-        
-        final samples = plugin.render(samplesPerNote);
-        final wavData = _createWavFile(samples, sampleRate);
-        
-        final source = await _soloud!.loadMem('flute_melody', wavData);
-        await _soloud!.play(source);
-        
-        await Future.delayed(Duration(milliseconds: (noteDuration * 1000).toInt()));
-        
-        await _soloud!.disposeSource(source);
-      }
-    } catch (e) {
-      debugPrint('Error playing melody: $e');
-    }
-
-    setState(() => _isPlaying = false);
   }
 
   @override
@@ -184,124 +65,437 @@ class _FluteDemoState extends State<FluteDemo> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(title: const Text("Flute Plugin Test")),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              if (!_audioInitialized)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 20),
-                  child: Text(
-                    "Initializing audio...",
-                    style: TextStyle(color: Colors.orange),
-                  ),
-                ),
-              
-              // Frequency Control
-              const Text("Frequency (Hz)", style: TextStyle(fontWeight: FontWeight.bold)),
-              Slider(
-                value: _frequency,
-                min: 100,
-                max: 1000,
-                divisions: 180,
-                label: _frequency.toStringAsFixed(0),
-                onChanged: (v) => setState(() => _frequency = v),
-              ),
-
-              const SizedBox(height: 10),
-              
-              // Breath Pressure
-              const Text("Breath Pressure", style: TextStyle(fontWeight: FontWeight.bold)),
-              Slider(
-                value: _pressure,
-                min: 0.1,
-                max: 1.0,
-                label: _pressure.toStringAsFixed(2),
-                onChanged: (v) => setState(() => _pressure = v),
-              ),
-
-              const Divider(height: 30),
-              const Text("Expressive Controls", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-
-              // Vibrato Gain
-              const Text("Vibrato Depth", style: TextStyle(fontWeight: FontWeight.bold)),
-              Slider(
-                value: _vibratoGain,
-                min: 0,
-                max: 128,
-                divisions: 128,
-                label: _vibratoGain.toStringAsFixed(0),
-                onChanged: (v) => setState(() => _vibratoGain = v),
-              ),
-
-              const SizedBox(height: 10),
-
-              // Vibrato Frequency
-              const Text("Vibrato Speed", style: TextStyle(fontWeight: FontWeight.bold)),
-              Slider(
-                value: _vibratoFreq,
-                min: 0,
-                max: 128,
-                divisions: 128,
-                label: _vibratoFreq.toStringAsFixed(0),
-                onChanged: (v) => setState(() => _vibratoFreq = v),
-              ),
-
-              const SizedBox(height: 10),
-
-              // Noise Gain
-              const Text("Breath Noise", style: TextStyle(fontWeight: FontWeight.bold)),
-              Slider(
-                value: _noiseGain,
-                min: 0,
-                max: 128,
-                divisions: 128,
-                label: _noiseGain.toStringAsFixed(0),
-                onChanged: (v) => setState(() => _noiseGain = v),
-              ),
-
-              const SizedBox(height: 10),
-
-              // Jet Delay
-              const Text("Tone Color (Jet Delay)", style: TextStyle(fontWeight: FontWeight.bold)),
-              Slider(
-                value: _jetDelay,
-                min: 0,
-                max: 128,
-                divisions: 128,
-                label: _jetDelay.toStringAsFixed(0),
-                onChanged: (v) => setState(() => _jetDelay = v),
-              ),
-
-              const SizedBox(height: 30),
-
-              ElevatedButton(
-                onPressed: _audioInitialized && !_isPlaying ? _playSingleNote : null,
-                child: const Text("▶ Play Single Note"),
-              ),
-
-              const SizedBox(height: 15),
-
-              ElevatedButton(
-                onPressed: _audioInitialized && !_isPlaying ? _playMelody : null,
-                child: const Text("🎶 Play Melody"),
-              ),
-
-              if (_isPlaying) const Padding(
-                padding: EdgeInsets.only(top: 20),
-                child: Text(
-                  "Playing...",
-                  style: TextStyle(fontSize: 18, color: Colors.green),
-                ),
-              )
+    return DefaultTabController(
+      length: 5,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("STK Min Demo"),
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.music_note), text: "Flute"),
+              Tab(icon: Icon(Icons.music_video), text: "Sax"),
+              Tab(icon: Icon(Icons.celebration), text: "Shakers"),
+              Tab(icon: Icon(Icons.album), text: "Drums"),
+              Tab(icon: Icon(Icons.blur_circular), text: "Percussion"),
             ],
           ),
         ),
+        body: !_audioInitialized
+            ? const Center(child: CircularProgressIndicator())
+            : TabBarView(
+                children: [
+                  InstrumentSection(
+                    name: "Flute",
+                    instrument: Flute(),
+                    controls: const [
+                      ControlInfo(name: "Vibrato Depth", number: 1, min: 0, max: 128, initial: 20),
+                      ControlInfo(name: "Vibrato Speed", number: 11, min: 0, max: 128, initial: 60),
+                      ControlInfo(name: "Breath Noise", number: 4, min: 0, max: 128, initial: 20),
+                      ControlInfo(name: "Tone Color", number: 2, min: 0, max: 128, initial: 60),
+                    ],
+                  ),
+                  InstrumentSection(
+                    name: "Saxophone",
+                    instrument: Saxophone(),
+                    controls: const [
+                      ControlInfo(name: "Vibrato Depth", number: 1, min: 0, max: 128, initial: 30),
+                      ControlInfo(name: "Vibrato Speed", number: 11, min: 0, max: 128, initial: 50),
+                      ControlInfo(name: "Reed Stiffness", number: 2, min: 0, max: 128, initial: 40),
+                      ControlInfo(name: "Breath Noise", number: 4, min: 0, max: 128, initial: 15),
+                    ],
+                  ),
+                  ShakersSection(soloud: _soloud!),
+                  DrummerSection(soloud: _soloud!),
+                  ModalBarSection(soloud: _soloud!),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class ControlInfo {
+  final String name;
+  final int number;
+  final double min;
+  final double max;
+  final double initial;
+
+  const ControlInfo({
+    required this.name,
+    required this.number,
+    required this.min,
+    required this.max,
+    required this.initial,
+  });
+}
+
+class InstrumentSection extends StatefulWidget {
+  final String name;
+  final dynamic instrument;
+  final List<ControlInfo> controls;
+
+  const InstrumentSection({
+    super.key,
+    required this.name,
+    required this.instrument,
+    required this.controls,
+  });
+
+  @override
+  State<InstrumentSection> createState() => _InstrumentSectionState();
+}
+
+class _InstrumentSectionState extends State<InstrumentSection> {
+  final Map<int, double> _values = {};
+  double _frequency = 440.0;
+  double _pressure = 0.8;
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    for (var control in widget.controls) {
+      _values[control.number] = control.initial;
+    }
+  }
+
+  Future<void> _play() async {
+    if (_isPlaying) return;
+    setState(() => _isPlaying = true);
+
+    try {
+      widget.instrument.init(_frequency);
+      _values.forEach((num, val) {
+        widget.instrument.controlChange(num, val);
+      });
+      widget.instrument.noteOn(_frequency, _pressure);
+
+      final samples = widget.instrument.render(44100);
+      final wavData = createWavFile(samples, 44100);
+      
+      final source = await SoLoud.instance.loadMem('${widget.name}_note', wavData);
+      await SoLoud.instance.play(source);
+      await Future.delayed(const Duration(seconds: 1));
+      await SoLoud.instance.disposeSource(source);
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
+
+    setState(() => _isPlaying = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Text("Frequency: ${_frequency.toInt()} Hz"),
+          Slider(
+            value: _frequency,
+            min: 100,
+            max: 1000,
+            onChanged: (v) => setState(() => _frequency = v),
+          ),
+          Text("Pressure: ${_pressure.toStringAsFixed(2)}"),
+          Slider(
+            value: _pressure,
+            min: 0,
+            max: 1,
+            onChanged: (v) => setState(() => _pressure = v),
+          ),
+          const Divider(),
+          ...widget.controls.map((c) => Column(
+            children: [
+              Text(c.name),
+              Slider(
+                value: _values[c.number]!,
+                min: c.min,
+                max: c.max,
+                onChanged: (v) => setState(() => _values[c.number] = v),
+              ),
+            ],
+          )),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _isPlaying ? null : _play,
+            child: Text(_isPlaying ? "Playing..." : "Play Note"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ShakersSection extends StatefulWidget {
+  final SoLoud soloud;
+  const ShakersSection({super.key, required this.soloud});
+
+  @override
+  State<ShakersSection> createState() => _ShakersSectionState();
+}
+
+class _ShakersSectionState extends State<ShakersSection> {
+  final shakers = Shakers();
+  int _selectedType = Shakers.maraca;
+  double _energy = 80.0;
+  bool _isPlaying = false;
+
+  void _play() async {
+    if (_isPlaying) return;
+    setState(() => _isPlaying = true);
+
+    try {
+      shakers.init(_selectedType);
+      shakers.controlChange(2, _energy);
+      // Pass a reasonable frequency for shakers (MIDI 69 = 440Hz)
+      shakers.noteOn(440.0, 0.8);
+
+      final samples = shakers.render(22050);
+      final wavData = createWavFile(samples, 44100);
+      
+      final source = await widget.soloud.loadMem('shaker', wavData);
+      await widget.soloud.play(source);
+      await Future.delayed(const Duration(milliseconds: 500));
+      await widget.soloud.disposeSource(source);
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
+
+    setState(() => _isPlaying = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          DropdownButton<int>(
+            value: _selectedType,
+            isExpanded: true,
+            items: const [
+              DropdownMenuItem(value: Shakers.maraca, child: Text("Maraca")),
+              DropdownMenuItem(value: Shakers.tambourine, child: Text("Tambourine")),
+              DropdownMenuItem(value: Shakers.sleighBells, child: Text("Sleigh Bells")),
+              DropdownMenuItem(value: Shakers.bambooChimes, child: Text("Bamboo Chimes")),
+              DropdownMenuItem(value: Shakers.waterDrops, child: Text("Water Drops")),
+            ],
+            onChanged: (v) => setState(() => _selectedType = v!),
+          ),
+          const SizedBox(height: 20),
+          const Text("Shake Energy"),
+          Slider(
+            value: _energy,
+            min: 0,
+            max: 128,
+            onChanged: (v) => setState(() => _energy = v),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _isPlaying ? null : _play,
+            child: const Text("Shake!"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DrummerSection extends StatefulWidget {
+  final SoLoud soloud;
+  const DrummerSection({super.key, required this.soloud});
+
+  @override
+  State<DrummerSection> createState() => _DrummerSectionState();
+}
+
+class _DrummerSectionState extends State<DrummerSection> {
+  final drummer = Drummer();
+  double _pitch = 1.0;
+  bool _isPlaying = false;
+
+  void _playDrum(double note) async {
+    if (_isPlaying) return;
+    setState(() => _isPlaying = true);
+
+    try {
+      drummer.setPitch(_pitch);
+      // Convert MIDI note to frequency for STK Drummer
+      final freq = midiToFreq(note);
+      drummer.noteOn(freq, 0.9);
+      final samples = drummer.render(22050);
+      final wavData = createWavFile(samples, 44100);
+      
+      final source = await widget.soloud.loadMem('drum', wavData);
+      await widget.soloud.play(source);
+      await Future.delayed(const Duration(milliseconds: 500));
+      await widget.soloud.disposeSource(source);
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
+
+    setState(() => _isPlaying = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Text("Drum Pitch: ${_pitch.toStringAsFixed(2)}"),
+          Slider(
+            value: _pitch,
+            min: 0.25,
+            max: 4.0,
+            onChanged: (v) => setState(() => _pitch = v),
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              ElevatedButton(onPressed: () => _playDrum(36), child: const Text("Bass Drum")),
+              ElevatedButton(onPressed: () => _playDrum(38), child: const Text("Snare")),
+              ElevatedButton(onPressed: () => _playDrum(42), child: const Text("Closed Hi-Hat")),
+              ElevatedButton(onPressed: () => _playDrum(46), child: const Text("Open Hi-Hat")),
+              ElevatedButton(onPressed: () => _playDrum(50), child: const Text("High Tom")),
+              ElevatedButton(onPressed: () => _playDrum(56), child: const Text("Cowbell")),
+              const SizedBox(width: double.infinity),
+              ElevatedButton(
+                onPressed: () => _playDrum(24), 
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade100),
+                child: const Text("Secret 'Dope' Shouting"),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Convert MIDI note to frequency
+double midiToFreq(double midi) {
+  return 440.0 * pow(2.0, (midi - 69.0) / 12.0);
+}
+
+/// Helper to create WAV file
+Uint8List createWavFile(List<double> samples, int sampleRate) {
+  final numSamples = samples.length;
+  final dataSize = numSamples * 2;
+  final buffer = ByteData(44 + dataSize);
+  
+  // RIFF header
+  buffer.setUint32(0, 0x52494646, Endian.big); // "RIFF"
+  buffer.setUint32(4, 36 + dataSize, Endian.little);
+  buffer.setUint32(8, 0x57415645, Endian.big); // "WAVE"
+  
+  // fmt chunk
+  buffer.setUint32(12, 0x666D7420, Endian.big); // "fmt "
+  buffer.setUint32(16, 16, Endian.little);
+  buffer.setUint16(20, 1, Endian.little);
+  buffer.setUint16(22, 1, Endian.little);
+  buffer.setUint32(24, sampleRate, Endian.little);
+  buffer.setUint32(28, sampleRate * 2, Endian.little);
+  buffer.setUint16(32, 2, Endian.little);
+  buffer.setUint16(34, 16, Endian.little);
+  
+  // data chunk
+  buffer.setUint32(36, 0x64617461, Endian.big);
+  buffer.setUint32(40, dataSize, Endian.little);
+  
+  var offset = 44;
+  for (var sample in samples) {
+    final intSample = (sample * 32767).clamp(-32768, 32767).toInt();
+    buffer.setInt16(offset, intSample, Endian.little);
+    offset += 2;
+  }
+  
+  return buffer.buffer.asUint8List();
+}
+
+class ModalBarSection extends StatefulWidget {
+  final SoLoud soloud;
+  const ModalBarSection({super.key, required this.soloud});
+
+  @override
+  State<ModalBarSection> createState() => _ModalBarSectionState();
+}
+
+class _ModalBarSectionState extends State<ModalBarSection> {
+  final modalBar = ModalBar();
+  int _preset = ModalBar.agogo;
+  double _frequency = 440.0;
+  bool _isPlaying = false;
+
+  void _play() async {
+    if (_isPlaying) return;
+    setState(() => _isPlaying = true);
+
+    try {
+      modalBar.init(_preset);
+      modalBar.noteOn(_frequency, 0.8);
+
+      final samples = modalBar.render(22050);
+      final wavData = createWavFile(samples, 44100);
+      
+      final source = await widget.soloud.loadMem('modalbar_note', wavData);
+      await widget.soloud.play(source);
+      await Future.delayed(const Duration(seconds: 1));
+      await widget.soloud.disposeSource(source);
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
+
+    setState(() => _isPlaying = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          DropdownButton<int>(
+            value: _preset,
+            items: const [
+              DropdownMenuItem(value: ModalBar.marimba, child: Text("Marimba")),
+              DropdownMenuItem(value: ModalBar.vibraphone, child: Text("Vibraphone")),
+              DropdownMenuItem(value: ModalBar.agogo, child: Text("Agogo (African)")),
+              DropdownMenuItem(value: ModalBar.wood1, child: Text("Wood Block 1")),
+              DropdownMenuItem(value: ModalBar.wood2, child: Text("Wood Block 2")),
+              DropdownMenuItem(value: ModalBar.beats, child: Text("Beats")),
+              DropdownMenuItem(value: ModalBar.clump, child: Text("Clump")),
+            ],
+            onChanged: (v) => setState(() => _preset = v!),
+          ),
+          const SizedBox(height: 10),
+          Text("Frequency: ${_frequency.toInt()} Hz"),
+          Slider(
+            value: _frequency,
+            min: 100,
+            max: 2000,
+            onChanged: (v) => setState(() => _frequency = v),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _play,
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(200, 60),
+              backgroundColor: Colors.orange,
+            ),
+            child: const Text("Strike!", style: TextStyle(fontSize: 20, color: Colors.white)),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            "Agogo is a classic African percussion instrument. Use higher frequencies for 'slap' sounds and lower for 'bass' tones.",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
+          ),
+        ],
       ),
     );
   }

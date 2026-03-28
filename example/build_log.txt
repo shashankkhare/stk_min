@@ -1,0 +1,35 @@
+Launching lib/main.dart on Linux in debug mode...
+Building Linux application...                                   
+**************** SOLOUD CONFIGURE.CMAKE
+[+] Build dynamic library enabled
+[-] Build static library disabled
+[-] Build C API disabled
+[+] Build MiniAudio enabled
+[-] Build demos disabled
+[+] NULL backend enabled
+[-] SDL2 backend disabled
+[+] ALSA backend enabled
+[-] CoreAudio backend disabled
+[-] OpenSLES backend disabled
+[-] XAudio2 backend disabled
+[-] WINMM backend disabled
+[-] WASAPI backend disabled
+[-] Generate Glue disabled
+**************** SOLOUD SRC.CMAKE START
+**************** SOLOUD SRC.CMAKE END  soloud
+NO_OPUS_OGG_LIBS has not been set. Linking Opus and Ogg libraries!
+✓ Built build/linux/x64/debug/bundle/stk_min_example
+Gdk-Message: 22:19:03.187: Unable to load  from the cursor theme
+Syncing files to device Linux...                                    87ms
+
+Flutter run key commands.
+r Hot reload. 🔥🔥🔥
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on Linux is available at: http://127.0.0.1:40289/Uk96wWRKvTc=/
+The Flutter DevTools debugger and profiler on Linux is available at: http://127.0.0.1:40289/Uk96wWRKvTc=/devtools/?uri=ws://127.0.0.1:40289/Uk96wWRKvTc=/ws
+Lost connection to device.

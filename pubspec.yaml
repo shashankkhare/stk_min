@@ -1,6 +1,6 @@
 name: stk_min
 description: A minimalist, cross-platform Flutter wrapper for the Synthesis ToolKit (STK) library. Provides FFI-based access to physical modeling synthesis for realistic musical instruments.
-version: 0.1.0
+version: 0.3.0
 homepage: https://github.com/shashankkhare/stk_min
 repository: https://github.com/shashankkhare/stk_min
 issue_tracker: https://github.com/shashankkhare/stk_min/issues

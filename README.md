@@ -14,6 +14,10 @@ A minimalist, cross-platform Flutter wrapper for the [Synthesis ToolKit (STK)](h
 ## Currently Supported Instruments
 
 - **Flute**: Physical model of a flute with breath control, vibrato, and tonal adjustments
+- **Saxophone**: Physical model of a saxophone with reed stiffness control, vibrato, and breath dynamics
+- **Shakers**: Physically informed stochastic event modeling (PhISEM) of various percussion instruments (Maracas, Tambourine, Sleighbells, etc.)
+- **Drummer**: General MIDI-compatible drum kit using audio samples
+- **ModalBar**: Resonant bar instruments with presets for **Marimba**, **Vibraphone**, **Agogo** (African percussion), and more.
 
 ## Installation
 
@@ -21,7 +25,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  stk_min: ^0.1.0
+  stk_min: ^0.2.0
 ```
 
 Then run:
@@ -53,6 +57,30 @@ final samples = flute.render(44100);
 // (e.g., flutter_soloud, just_audio, audioplayers, etc.)
 ```
 
+### Saxophone Example
+
+```dart
+import 'package:stk_min/saxophone.dart';
+
+// Create a saxophone instance
+final saxophone = Saxophone();
+
+// Initialize with a frequency (D4 = 293.66 Hz)
+saxophone.init(293.66);
+
+// Play a note
+saxophone.noteOn(293.66, 0.9);
+
+// Generate audio samples
+final samples = saxophone.render(44100);
+
+// Add expressive controls
+saxophone.controlChange(1, 40.0);   // Vibrato depth
+saxophone.controlChange(11, 50.0);  // Vibrato speed
+saxophone.controlChange(2, 80.0);   // Reed stiffness
+saxophone.controlChange(4, 15.0);   // Breath noise
+```
+
 ### Advanced Control
 
 ```dart
@@ -74,9 +102,74 @@ flute.noteOn(523.25, 0.75);
 final samples = flute.render(44100);
 ```
 
+### Shakers Example
+
+```dart
+import 'package:stk_min/shakers.dart';
+
+// Create a Shakers instance (default to Maraca)
+final shakers = Shakers(Shakers.maraca);
+
+// Shake it! (instrument type, amplitude)
+shakers.noteOn(Shakers.maraca.toDouble(), 0.8);
+
+// Trigger a different sound (e.g., Tambourine)
+shakers.noteOn(Shakers.tambourine.toDouble(), 0.9);
+
+// Add expressive controls
+shakers.controlChange(2, 80.0);   // Shake energy
+shakers.controlChange(4, 50.0);   // System decay
+shakers.controlChange(11, 20.0);  // Number of objects
+
+// Render audio
+final samples = shakers.render(44100);
+```
+
+### Drummer Example
+
+```dart
+import 'package:stk_min/stk_min.dart';
+import 'package:stk_min/drummer.dart';
+
+// Set path to STK rawwave files (required for Drummer)
+setRawwavePath('/path/to/stk/rawwaves/');
+
+final drummer = Drummer();
+
+// Play a Bass Drum sound (MIDI 36)
+drummer.noteOn(36.0, 0.9);
+
+// Play a Snare Drum sound (MIDI 38)
+drummer.noteOn(38.0, 0.82);
+
+// Render audio
+final samples = drummer.render(22050);
+```
+
+### ModalBar Example (African Percussion)
+
+```dart
+import 'package:stk_min/modal_bar.dart';
+
+final modalBar = ModalBar();
+
+// Initialize with Agogo preset (African drum sound)
+modalBar.init(ModalBar.agogo);
+
+// Play a high "slap" sound (880 Hz)
+modalBar.noteOn(880.0, 0.8);
+
+// Gain control (Stick hardness)
+modalBar.controlChange(2, 80.0);
+
+final samples = modalBar.render(44100);
+```
+
 ### Control Change Parameters
 
 The `controlChange(int number, double value)` method accepts the following parameters (values 0-128):
+
+#### Flute Control Changes:
 
 | Parameter | Control # | Description |
 |-----------|-----------|-------------|
@@ -85,6 +178,37 @@ The `controlChange(int number, double value)` method accepts the following param
 | Noise Gain | 4 | Breath noise amount (adds realism) |
 | Vibrato Frequency | 11 | Speed of vibrato oscillation |
 | Breath Pressure | 128 | Overall breath pressure envelope |
+
+#### Saxophone Control Changes:
+
+| Parameter | Control # | Description |
+|-----------|-----------|-------------|
+| Vibrato Gain | 1 | Depth of pitch vibrato (0 = none, 128 = maximum) |
+| Reed Stiffness | 2 | Reed flexibility (lower = softer, higher = stiffer) |
+| Noise Gain | 4 | Breath noise amount (adds realism) |
+| Vibrato Frequency | 11 | Speed of vibrato oscillation |
+| Breath Pressure | 128 | Overall breath pressure envelope |
+
+#### Shakers Control Changes:
+
+| Parameter | Control # | Description |
+|-----------|-----------|-------------|
+| Shake Energy | 2 | Intensity of the shake |
+| System Decay | 4 | How fast the sound fades out |
+| Number Of Objects | 11 | Number of shaking objects (e.g., beads in maraca) |
+| Resonance Frequency| 1 | Main resonance of the instrument |
+| Shake Energy | 128 | Overall volume/energy |
+
+#### ModalBar Control Changes
+
+| Parameter | Control # | Description |
+|-----------|-----------|-------------|
+| Stick Hardness | 2 | Hardness of the strike (0 = soft, 128 = hard) |
+| Strike Position | 4 | Where the bar is struck (0 = edge, 128 = center) |
+| Vibrato Gain | 1 | Depth of pitch vibrato |
+| Vibrato Frequency | 11 | Speed of vibrato oscillation |
+| Preset | 16 | Switch between instruments (Marimba, Vibraphone, Agogo, etc.) |
+
 
 ### Complete Example with Audio Playback
 
@@ -196,6 +320,10 @@ The STK library is licensed under its own terms. Please see the [STK License](ht
 Contributions are welcome! Please feel free to submit a Pull Request. Areas for contribution:
 
 - Adding more STK instruments
+   use wget to download the STK library from the following link: https://github.com/thestk/stk  and add the necessary files to the src directory. For example Flute.h and Flute.cpp for flute support. If the instrument causes compilation errors then download additional files. A simpler way is to use wget -q https://raw.githubusercontent.com/thestk/stk/master/include/Flute.h to download the header files and wget -q https://raw.githubusercontent.com/thestk/stk/master/src/Flute.cpp to download the source files.
+
+
+
 - Improving documentation
 - Adding more examples
 - Performance optimizations
@@ -203,4 +331,4 @@ Contributions are welcome! Please feel free to submit a Pull Request. Areas for 
 
 ## Issues
 
-Please file issues on the [GitHub repository](https://github.com/yourusername/stk_min/issues).
+Please file issues on the [GitHub repository](https://github.com/shashankkhare/stk_min/issues).

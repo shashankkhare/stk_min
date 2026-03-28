@@ -1,26 +1,7 @@
 import 'dart:ffi' as ffi;
 import 'dart:io';
-import 'package:ffi/ffi.dart';
-export 'saxophone.dart';
-export 'shakers.dart';
-export 'drummer.dart';
-export 'modal_bar.dart';
 
-void setRawwavePath(String path) {
-  final ffi.DynamicLibrary lib;
-  if (Platform.isAndroid) {
-    lib = ffi.DynamicLibrary.open('libstk_min.so');
-  } else {
-    lib = ffi.DynamicLibrary.process();
-  }
-  final void Function(ffi.Pointer<Utf8>) setPath = lib
-      .lookupFunction<ffi.Void Function(ffi.Pointer<Utf8>), void Function(ffi.Pointer<Utf8>)>('stk_setRawwavePath');
-  final pathPtr = path.toNativeUtf8();
-  setPath(pathPtr);
-  malloc.free(pathPtr);
-}
-
-class Flute {
+class Saxophone {
   late final ffi.DynamicLibrary _lib;
 
   late final void Function(double) _ffiInit;
@@ -28,21 +9,18 @@ class Flute {
   late final void Function(int, double) _ffiControlChange;
   late final ffi.Pointer<ffi.Float> Function(int) _ffiRender;
 
-  Flute() {
+  Saxophone() {
     if (Platform.isAndroid) {
       _lib = ffi.DynamicLibrary.open('libstk_min.so');
     } else {
       // iOS, macOS, Linux, and Windows (if loaded by runner)
-      // Note: For Windows, we might need explicit load if process() fails, 
-      // but let's stick to what worked for Linux for now.
-      // Actually, let's keep it robust.
       _lib = ffi.DynamicLibrary.process();
     }
 
-    _ffiInit = _lib.lookupFunction<_InitNative, _InitDart>('stk_init');
-    _ffiNoteOn = _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('stk_noteOn');
-    _ffiControlChange = _lib.lookupFunction<_ControlChangeNative, _ControlChangeDart>('stk_controlChange');
-    _ffiRender = _lib.lookupFunction<_RenderNative, _RenderDart>('stk_render');
+    _ffiInit = _lib.lookupFunction<_InitNative, _InitDart>('sax_init');
+    _ffiNoteOn = _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('sax_noteOn');
+    _ffiControlChange = _lib.lookupFunction<_ControlChangeNative, _ControlChangeDart>('sax_controlChange');
+    _ffiRender = _lib.lookupFunction<_RenderNative, _RenderDart>('sax_render');
   }
 
   void init(double freq) => _ffiInit(freq);
@@ -50,7 +28,7 @@ class Flute {
   
   /// Control change parameters:
   /// - 1: Vibrato Gain (0-128)
-  /// - 2: Jet Delay (0-128)
+  /// - 2: Reed Stiffness (0-128)
   /// - 4: Noise Gain (0-128)
   /// - 11: Vibrato Frequency (0-128)
   /// - 128: Breath Pressure (0-128)
@@ -74,4 +52,3 @@ typedef _ControlChangeDart = void Function(int, double);
 
 typedef _RenderNative = ffi.Pointer<ffi.Float> Function(ffi.Int32);
 typedef _RenderDart = ffi.Pointer<ffi.Float> Function(int);
-
