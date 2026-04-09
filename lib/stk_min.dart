@@ -1,10 +1,57 @@
 import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'package:ffi/ffi.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+
 export 'saxophone.dart';
 export 'shakers.dart';
 export 'drummer.dart';
 export 'modal_bar.dart';
+
+class StkMin {
+  static const List<String> _rawwaves = [
+    'bassdrum.raw',
+    'cowbell1.raw',
+    'crashcym.raw',
+    'dope.raw',
+    'hihatcym.raw',
+    'marmstk1.raw',
+    'ridecymb.raw',
+    'snardrum.raw',
+    'tambourn.raw',
+    'tomhidrm.raw',
+    'tomlowdr.raw',
+    'tommiddr.raw',
+  ];
+
+  /// Initializes the STK engine by extracting raw samples to the device's local storage.
+  /// This should be called once at app startup before using any instruments that require samples.
+  static Future<void> initialize() async {
+    final Directory supportDir = await getApplicationSupportDirectory();
+    final String rawwaveDir = p.join(supportDir.path, 'rawwaves');
+    final Directory dir = Directory(rawwaveDir);
+
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+
+    for (final wave in _rawwaves) {
+      final String assetPath = 'packages/stk_min/assets/rawwaves/$wave';
+      final String targetPath = p.join(rawwaveDir, wave);
+      
+      final File targetFile = File(targetPath);
+      // For now, always copy to ensure we have the latest.
+      // Optimization: check if exists or version.
+      final ByteData data = await rootBundle.load(assetPath);
+      final List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      await targetFile.writeAsBytes(bytes, flush: true);
+    }
+
+    setRawwavePath(rawwaveDir);
+  }
+}
 
 void setRawwavePath(String path) {
   final ffi.DynamicLibrary lib;
@@ -15,7 +62,14 @@ void setRawwavePath(String path) {
   }
   final void Function(ffi.Pointer<Utf8>) setPath = lib
       .lookupFunction<ffi.Void Function(ffi.Pointer<Utf8>), void Function(ffi.Pointer<Utf8>)>('stk_setRawwavePath');
-  final pathPtr = path.toNativeUtf8();
+  
+  // Ensure the path ends with a separator as STK might expect it
+  String finalPath = path;
+  if (!finalPath.endsWith(Platform.pathSeparator)) {
+    finalPath += Platform.pathSeparator;
+  }
+
+  final pathPtr = finalPath.toNativeUtf8();
   setPath(pathPtr);
   malloc.free(pathPtr);
 }

@@ -49,9 +49,9 @@ class _StkDemoHomeState extends State<StkDemoHome> {
     try {
       _soloud = SoLoud.instance;
       await _soloud!.init();
-      // Set rawwave path for Drummer
-      setRawwavePath('/home/shashankkhare/AndroidStudioProjects/stk_min/rawwaves/');
+      await StkMin.initialize();
       setState(() => _audioInitialized = true);
+
     } catch (e) {
       debugPrint('Failed to initialize audio: $e');
     }
