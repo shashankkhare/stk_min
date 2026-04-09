@@ -23,11 +23,10 @@ class Drummer {
   }
 
   /// Trigger a drum sound.
-  /// [instrument] index into the drum waves list.
-  /// [amp] amplitude (0.0 to 1.0).
-  /// [frequency] optional frequency for playback rate adjustment (defaults to 65.41 Hz).
-  void noteOn(double instrument, double amp, [double frequency = 65.41]) => 
-      _ffiNoteOn(instrument, amp, frequency);
+  /// [instrument] direct sample index (0=Dope, 1=Bass, 2=Snare, 6=Hat).
+  /// [amp] volume (0.0 - 1.0).
+  /// [frequency] playback frequency in Hz.
+  void noteOn(double instrument, double amp, double frequency) => _ffiNoteOn(instrument, amp, frequency);
   
   void noteOff(double amp) => _ffiNoteOff(amp);
 

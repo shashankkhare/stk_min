@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.4.2
+
+* **Drummer Frequency Fix**: Implemented explicit frequency-based triggering to resolve "vocal sample" glitch.
+* **FFI Refinement**: Updated `noteOn` signature to allow direct Hz control for improved sample selectivity.
+
 ## 0.4.1
 
 * **Drummer Stability**: Fixed FFI bridge mismatch that could cause runtime crashes.

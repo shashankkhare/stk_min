@@ -50,6 +50,13 @@ Drummer :: ~Drummer( void )
 {
 }
 
+void Drummer :: noteOn( StkFloat frequency, StkFloat amplitude )
+{
+  // Satisfy interface by treating frequency as the instrument parameter
+  // and using it as a direct Hz value for the 3-param version.
+  this->noteOn( frequency, amplitude, frequency );
+}
+
 void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude, StkFloat frequency )
 {
   if ( amplitude < 0.0 || amplitude > 1.0 ) {

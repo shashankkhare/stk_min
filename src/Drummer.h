@@ -46,6 +46,7 @@ class Drummer : public Instrmnt
     instrument.  An StkError will be thrown if the rawwave path is
     incorrectly set.
   */
+  void noteOn( StkFloat frequency, StkFloat amplitude );
   void noteOn( StkFloat instrument, StkFloat amplitude, StkFloat frequency );
 
   //! Stop a note with the given amplitude (speed of decay).

@@ -300,6 +300,20 @@ class _ShakersSectionState extends State<ShakersSection> {
   }
 }
 
+class DrumPad {
+  final String name;
+  final int index;
+  final double midiNote;
+  final Color color;
+
+  const DrumPad({
+    required this.name,
+    required this.index,
+    required this.midiNote,
+    required this.color,
+  });
+}
+
 class DrummerSection extends StatefulWidget {
   final SoLoud soloud;
   const DrummerSection({super.key, required this.soloud});
@@ -311,39 +325,45 @@ class DrummerSection extends StatefulWidget {
 class _DrummerSectionState extends State<DrummerSection> {
   final drummer = Drummer();
   double _pitch = 1.0;
-  bool _isPlaying = false;
+  int? _activePadIndex;
 
-  void _playDrum(double note) async {
-    if (_isPlaying) return;
-    setState(() => _isPlaying = true);
+  static const List<DrumPad> _pads = [
+    DrumPad(name: "Kick", index: 1, midiNote: 36, color: Colors.deepOrange),
+    DrumPad(name: "Snare", index: 2, midiNote: 38, color: Colors.blue),
+    DrumPad(name: "Low Tom", index: 3, midiNote: 41, color: Colors.purple),
+    DrumPad(name: "Mid Tom", index: 4, midiNote: 45, color: Colors.purpleAccent),
+    DrumPad(name: "High Tom", index: 5, midiNote: 48, color: Colors.deepPurple),
+    DrumPad(name: "Hi-Hat", index: 6, midiNote: 42, color: Colors.amber),
+    DrumPad(name: "Ride", index: 7, midiNote: 51, color: Colors.orange),
+    DrumPad(name: "Crash", index: 8, midiNote: 49, color: Colors.redAccent),
+    DrumPad(name: "Cowbell", index: 9, midiNote: 56, color: Colors.teal),
+    DrumPad(name: "Tambourine", index: 10, midiNote: 54, color: Colors.cyan),
+    DrumPad(name: "Dope", index: 0, midiNote: 24, color: Colors.black54),
+  ];
+
+  void _playPad(DrumPad pad) async {
+    setState(() => _activePadIndex = pad.index);
+    
+    // Quick reset of active state for visual feedback
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) setState(() => _activePadIndex = null);
+    });
 
     try {
       drummer.setPitch(_pitch);
-      
-      // Map MIDI notes to STK Drummer indices
-      int sampleIndex = 1; // Default Bass Drum
-      if (note == 38) sampleIndex = 2; // Snare
-      if (note == 42) sampleIndex = 6; // Closed HH
-      if (note == 46) sampleIndex = 6; // Open HH (uses same sample in this simple bridge)
-      if (note == 50) sampleIndex = 5; // Tom
-      if (note == 56) sampleIndex = 9; // Cowbell
-      if (note == 24) sampleIndex = 0; // Dope
-
-      final freq = midiToFreq(note);
-      drummer.noteOn(sampleIndex.toDouble(), 0.9, freq);
+      final freq = midiToFreq(pad.midiNote);
+      drummer.noteOn(pad.index.toDouble(), 0.9, freq);
       
       final samples = drummer.render(22050);
       final wavData = createWavFile(samples, 44100);
       
-      final source = await widget.soloud.loadMem('drum', wavData);
+      final source = await widget.soloud.loadMem('drum_${pad.index}', wavData);
       await widget.soloud.play(source);
       await Future.delayed(const Duration(milliseconds: 500));
       await widget.soloud.disposeSource(source);
     } catch (e) {
       debugPrint('Error: $e');
     }
-
-    setState(() => _isPlaying = false);
   }
 
   @override
@@ -352,31 +372,75 @@ class _DrummerSectionState extends State<DrummerSection> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          Text("Drum Pitch: ${_pitch.toStringAsFixed(2)}"),
-          Slider(
-            value: _pitch,
-            min: 0.25,
-            max: 4.0,
-            onChanged: (v) => setState(() => _pitch = v),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
+          Row(
             children: [
-              ElevatedButton(onPressed: () => _playDrum(36), child: const Text("Bass Drum")),
-              ElevatedButton(onPressed: () => _playDrum(38), child: const Text("Snare")),
-              ElevatedButton(onPressed: () => _playDrum(42), child: const Text("Closed Hi-Hat")),
-              ElevatedButton(onPressed: () => _playDrum(46), child: const Text("Open Hi-Hat")),
-              ElevatedButton(onPressed: () => _playDrum(50), child: const Text("High Tom")),
-              ElevatedButton(onPressed: () => _playDrum(56), child: const Text("Cowbell")),
-              const SizedBox(width: double.infinity),
-              ElevatedButton(
-                onPressed: () => _playDrum(24), 
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade100),
-                child: const Text("Secret 'Dope' Shouting"),
+              const Icon(Icons.speed, color: Colors.grey),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text("Drum Pitch: ${_pitch.toStringAsFixed(2)}x", 
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              Slider(
+                value: _pitch,
+                min: 0.5,
+                max: 2.0,
+                onChanged: (v) => setState(() => _pitch = v),
               ),
             ],
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.2,
+              ),
+              itemCount: _pads.length,
+              itemBuilder: (context, i) {
+                final pad = _pads[i];
+                final bool isActive = _activePadIndex == pad.index;
+                
+                return GestureDetector(
+                  onTapDown: (_) => _playPad(pad),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 50),
+                    decoration: BoxDecoration(
+                      color: isActive ? pad.color.withAlpha(128) : pad.color.withAlpha(51),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isActive ? pad.color : pad.color.withAlpha(128),
+                        width: isActive ? 3 : 1.5,
+                      ),
+                      boxShadow: isActive ? [
+                        BoxShadow(color: pad.color.withAlpha(102), blurRadius: 10, spreadRadius: 2)
+                      ] : [],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          pad.index == 0 ? Icons.record_voice_over : Icons.album, 
+                          color: pad.color,
+                          size: isActive ? 32 : 28,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          pad.name,
+                          style: TextStyle(
+                            color: pad.color.withAlpha(230),
+                            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
