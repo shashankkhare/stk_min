@@ -1,6 +1,14 @@
 # CHANGELOG
 
+## 0.4.0
+
+* **Universal Initialization**: Added `StkMin.initialize()` to automatically handle sample extraction and path configuration across all platforms.
+* **Unified Assets**: Moved raw samples into the package assets (`assets/rawwaves/`) so they are bundled automatically when the package is installed.
+* **Consistency**: Guaranteed identical behavior across Linux, Android, and iOS by using a unified storage mechanism for samples.
+* **Dependencies**: Added `path_provider` and `path` to manage cross-platform filesystem locations.
+
 ## 0.3.1
+
 
 * **SEO Optimization**: Updated package description with targeted keywords (physical modeling, percussion, FFI) to improve search discoverability on pub.dev.
 
