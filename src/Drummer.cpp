@@ -20,25 +20,7 @@
 
 namespace stk {
 
-// Not really General MIDI yet.
-unsigned char genMIDIMap[128] =
-  { 0,0,0,0,0,0,0,0,		// 0-7
-    0,0,0,0,0,0,0,0,		// 8-15
-    0,0,0,0,0,0,0,0,		// 16-23
-    0,0,0,0,0,0,0,0,		// 24-31
-    0,0,0,0,1,0,2,0,		// 32-39
-    2,3,6,3,6,4,7,4,		// 40-47
-    5,8,5,0,0,0,10,0,		// 48-55
-    9,0,0,0,0,0,0,0,		// 56-63
-    0,0,0,0,0,0,0,0,		// 64-71
-    0,0,0,0,0,0,0,0,		// 72-79
-    0,0,0,0,0,0,0,0,		// 80-87
-    0,0,0,0,0,0,0,0,		// 88-95
-    0,0,0,0,0,0,0,0,		// 96-103
-    0,0,0,0,0,0,0,0,		// 104-111
-    0,0,0,0,0,0,0,0,		// 112-119
-    0,0,0,0,0,0,0,0     // 120-127
-  };
+// Pure Frequency-to-Sample mapping removed in favor of explicit instrument indices.
 				  
 char waveNames[DRUM_NUMWAVES][16] =
   { 
@@ -68,22 +50,21 @@ Drummer :: ~Drummer( void )
 {
 }
 
-void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude )
+void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude, StkFloat frequency )
 {
   if ( amplitude < 0.0 || amplitude > 1.0 ) {
     oStream_ << "Drummer::noteOn: amplitude parameter is out of bounds!";
     handleError( StkError::WARNING ); return;
   }
 
-  // Yes, this is tres kludgey.
-  int noteNumber = (int) ( ( 12 * log( instrument / 220.0 ) / log( 2.0 ) ) + 57.01 );
+  // Instrument is now a direct index into waveNames
+  int sampleIndex = (int) instrument;
+  if ( sampleIndex < 0 || sampleIndex >= DRUM_NUMWAVES ) sampleIndex = 1; // Default to Bass Drum
 
-  // If we already have a wave of this note number loaded, just reset
-  // it.  Otherwise, look first for an unused wave or preempt the
-  // oldest if already at maximum polyphony.
+  // Find a voice
   int iWave;
   for ( iWave=0; iWave<DRUM_POLYPHONY; iWave++ ) {
-    if ( soundNumber_[iWave] == noteNumber ) {
+    if ( soundNumber_[iWave] == sampleIndex ) {
       if ( waves_[iWave].isFinished() ) {
         soundOrder_[iWave] = nSounding_;
         nSounding_++;
@@ -95,40 +76,37 @@ void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude )
     }
   }
 
-  if ( iWave == DRUM_POLYPHONY ) { // This note number is not currently loaded.
+  if ( iWave == DRUM_POLYPHONY ) {
     if ( nSounding_ < DRUM_POLYPHONY ) {
       for ( iWave=0; iWave<DRUM_POLYPHONY; iWave++ )
         if ( soundOrder_[iWave] < 0 ) break;
       nSounding_ += 1;
     }
-    else { // interrupt oldest voice
+    else {
       for ( iWave=0; iWave<DRUM_POLYPHONY; iWave++ )
         if ( soundOrder_[iWave] == 0 ) break;
-      // Re-order the list.
       for ( int j=0; j<DRUM_POLYPHONY; j++ ) {
         if ( soundOrder_[j] > soundOrder_[iWave] )
           soundOrder_[j] -= 1;
       }
     }
     soundOrder_[iWave] = nSounding_ - 1;
-    soundNumber_[iWave] = noteNumber;
-    //std::cout << "iWave = " << iWave << ", nSounding = " << nSounding_ << ", soundOrder[] = " << soundOrder_[iWave] << std::endl;
+    soundNumber_[iWave] = sampleIndex;
 
-    // Concatenate the STK rawwave path to the rawwave file
-    waves_[iWave].openFile( (Stk::rawwavePath() + waveNames[ genMIDIMap[ noteNumber ] ]).c_str(), true );
-    waves_[iWave].setRate( pitch_ * 22050.0 / Stk::sampleRate() );
+    waves_[iWave].openFile( (Stk::rawwavePath() + waveNames[ sampleIndex ]).c_str(), true );
     filters_[iWave].setPole( 0.999 - (amplitude * 0.6) );
     filters_[iWave].setGain( amplitude );
   }
 
-  /*
-#if defined(_STK_DEBUG_)
-  oStream_ << "Drummer::noteOn: number sounding = " << nSounding_ << ", notes: ";
-  for ( int i=0; i<nSounding_; i++ ) oStream_ << soundNumber_[i] << "  ";
-  oStream_ << '\n';
-  handleError( StkError::WARNING );
-#endif
-  */
+  // Set the playback rate based on requested frequency.
+  // We assume the original samples are tuned roughly to their MIDI pitch 
+  // (Kick=36/65.4Hz, Snare=38/73.4Hz, Hat=42/92.5Hz).
+  StkFloat baseFreq = 65.41; // Default Base
+  if (sampleIndex == 2) baseFreq = 73.42; // Snare
+  if (sampleIndex >= 6) baseFreq = 92.50; // Hi-hat range
+
+  StkFloat rate = (frequency / baseFreq) * pitch_ * (22050.0 / Stk::sampleRate());
+  waves_[iWave].setRate( rate );
 }
 
 void Drummer :: noteOff( StkFloat amplitude )

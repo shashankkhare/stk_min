@@ -4,7 +4,7 @@ import 'dart:io';
 class Drummer {
   late final ffi.DynamicLibrary _lib;
 
-  late final void Function(double, double) _ffiNoteOn;
+  late final void Function(double, double, double) _ffiNoteOn;
   late final void Function(double) _ffiNoteOff;
   late final void Function(double) _ffiSetPitch;
   late final ffi.Pointer<ffi.Float> Function(int) _ffiRender;
@@ -23,9 +23,11 @@ class Drummer {
   }
 
   /// Trigger a drum sound.
-  /// [instrument] frequency value as if MIDI note number.
-  /// General MIDI drum instrument numbers.
-  void noteOn(double instrument, double amp) => _ffiNoteOn(instrument, amp);
+  /// [instrument] index into the drum waves list.
+  /// [amp] amplitude (0.0 to 1.0).
+  /// [frequency] optional frequency for playback rate adjustment (defaults to 65.41 Hz).
+  void noteOn(double instrument, double amp, [double frequency = 65.41]) => 
+      _ffiNoteOn(instrument, amp, frequency);
   
   void noteOff(double amp) => _ffiNoteOff(amp);
 
@@ -38,8 +40,8 @@ class Drummer {
 }
 
 // FFI typedef pairs
-typedef _NoteOnNative = ffi.Void Function(ffi.Double, ffi.Double);
-typedef _NoteOnDart = void Function(double, double);
+typedef _NoteOnNative = ffi.Void Function(ffi.Double, ffi.Double, ffi.Double);
+typedef _NoteOnDart = void Function(double, double, double);
 
 typedef _NoteOffNative = ffi.Void Function(ffi.Double);
 typedef _NoteOffDart = void Function(double);

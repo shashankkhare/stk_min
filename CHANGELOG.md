@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.4.1
+
+* **Drummer Stability**: Fixed FFI bridge mismatch that could cause runtime crashes.
+* **Frequency Mapping**: Improved Drummer frequency logic to support real-time playback rate adjustment based on requested frequency.
+* **Native Refactoring**: Cleaned up Drummer.cpp and StkMini.cpp for better sample index handling.
+
 ## 0.4.0
 
 * **Universal Initialization**: Added `StkMin.initialize()` to automatically handle sample extraction and path configuration across all platforms.

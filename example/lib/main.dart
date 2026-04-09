@@ -2,9 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:stk_min/stk_min.dart';
-import 'package:stk_min/saxophone.dart';
-import 'package:stk_min/shakers.dart';
-import 'package:stk_min/drummer.dart';
 import 'dart:math';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
@@ -166,8 +163,8 @@ class _InstrumentSectionState extends State<InstrumentSection> {
 
     try {
       widget.instrument.init(_frequency);
-      _values.forEach((num, val) {
-        widget.instrument.controlChange(num, val);
+      _values.forEach((id, val) {
+        widget.instrument.controlChange(id, val);
       });
       widget.instrument.noteOn(_frequency, _pressure);
 
@@ -322,9 +319,19 @@ class _DrummerSectionState extends State<DrummerSection> {
 
     try {
       drummer.setPitch(_pitch);
-      // Convert MIDI note to frequency for STK Drummer
+      
+      // Map MIDI notes to STK Drummer indices
+      int sampleIndex = 1; // Default Bass Drum
+      if (note == 38) sampleIndex = 2; // Snare
+      if (note == 42) sampleIndex = 6; // Closed HH
+      if (note == 46) sampleIndex = 6; // Open HH (uses same sample in this simple bridge)
+      if (note == 50) sampleIndex = 5; // Tom
+      if (note == 56) sampleIndex = 9; // Cowbell
+      if (note == 24) sampleIndex = 0; // Dope
+
       final freq = midiToFreq(note);
-      drummer.noteOn(freq, 0.9);
+      drummer.noteOn(sampleIndex.toDouble(), 0.9, freq);
+      
       final samples = drummer.render(22050);
       final wavData = createWavFile(samples, 44100);
       

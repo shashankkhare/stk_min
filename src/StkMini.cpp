@@ -105,9 +105,9 @@ EXPORT float* shakers_render(int frames) {
 }
 
 // Drummer functions
-EXPORT void drummer_noteOn(double instrument, double amp) {
+EXPORT void drummer_noteOn(double instrument, double amp, double frequency) {
     if (!drummer) drummer = new stk::Drummer();
-    drummer->noteOn(instrument, amp);
+    drummer->noteOn(instrument, amp, frequency);
 }
 
 EXPORT void drummer_noteOff(double amp) {
