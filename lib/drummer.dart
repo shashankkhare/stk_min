@@ -16,18 +16,23 @@ class Drummer {
       _lib = ffi.DynamicLibrary.process();
     }
 
-    _ffiNoteOn = _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('drummer_noteOn');
-    _ffiNoteOff = _lib.lookupFunction<_NoteOffNative, _NoteOffDart>('drummer_noteOff');
-    _ffiSetPitch = _lib.lookupFunction<_SetPitchNative, _SetPitchDart>('drummer_setPitch');
-    _ffiRender = _lib.lookupFunction<_RenderNative, _RenderDart>('drummer_render');
+    _ffiNoteOn =
+        _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('drummer_noteOn');
+    _ffiNoteOff =
+        _lib.lookupFunction<_NoteOffNative, _NoteOffDart>('drummer_noteOff');
+    _ffiSetPitch =
+        _lib.lookupFunction<_SetPitchNative, _SetPitchDart>('drummer_setPitch');
+    _ffiRender =
+        _lib.lookupFunction<_RenderNative, _RenderDart>('drummer_render');
   }
 
   /// Trigger a drum sound.
   /// [instrument] direct sample index (0=Dope, 1=Bass, 2=Snare, 6=Hat).
   /// [amp] volume (0.0 - 1.0).
   /// [frequency] playback frequency in Hz.
-  void noteOn(double instrument, double amp, double frequency) => _ffiNoteOn(instrument, amp, frequency);
-  
+  void noteOn(double instrument, double amp, double frequency) =>
+      _ffiNoteOn(instrument, amp, frequency);
+
   void noteOff(double amp) => _ffiNoteOff(amp);
 
   void setPitch(double pitch) => _ffiSetPitch(pitch);

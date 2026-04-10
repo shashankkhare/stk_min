@@ -19,20 +19,23 @@ class Saxophone {
 
     _ffiInit = _lib.lookupFunction<_InitNative, _InitDart>('sax_init');
     _ffiNoteOn = _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('sax_noteOn');
-    _ffiControlChange = _lib.lookupFunction<_ControlChangeNative, _ControlChangeDart>('sax_controlChange');
+    _ffiControlChange =
+        _lib.lookupFunction<_ControlChangeNative, _ControlChangeDart>(
+            'sax_controlChange');
     _ffiRender = _lib.lookupFunction<_RenderNative, _RenderDart>('sax_render');
   }
 
   void init(double freq) => _ffiInit(freq);
   void noteOn(double freq, double amp) => _ffiNoteOn(freq, amp);
-  
+
   /// Control change parameters:
   /// - 1: Vibrato Gain (0-128)
   /// - 2: Reed Stiffness (0-128)
   /// - 4: Noise Gain (0-128)
   /// - 11: Vibrato Frequency (0-128)
   /// - 128: Breath Pressure (0-128)
-  void controlChange(int number, double value) => _ffiControlChange(number, value);
+  void controlChange(int number, double value) =>
+      _ffiControlChange(number, value);
 
   List<double> render(int frameCount) {
     final ptr = _ffiRender(frameCount);

@@ -48,7 +48,6 @@ class _StkDemoHomeState extends State<StkDemoHome> {
       await _soloud!.init();
       await StkMin.initialize();
       setState(() => _audioInitialized = true);
-
     } catch (e) {
       debugPrint('Failed to initialize audio: $e');
     }
@@ -85,20 +84,68 @@ class _StkDemoHomeState extends State<StkDemoHome> {
                     name: "Flute",
                     instrument: Flute(),
                     controls: const [
-                      ControlInfo(name: "Vibrato Depth", number: 1, min: 0, max: 128, initial: 20),
-                      ControlInfo(name: "Vibrato Speed", number: 11, min: 0, max: 128, initial: 60),
-                      ControlInfo(name: "Breath Noise", number: 4, min: 0, max: 128, initial: 20),
-                      ControlInfo(name: "Tone Color", number: 2, min: 0, max: 128, initial: 60),
+                      ControlInfo(
+                        name: "Vibrato Depth",
+                        number: 1,
+                        min: 0,
+                        max: 128,
+                        initial: 20,
+                      ),
+                      ControlInfo(
+                        name: "Vibrato Speed",
+                        number: 11,
+                        min: 0,
+                        max: 128,
+                        initial: 60,
+                      ),
+                      ControlInfo(
+                        name: "Breath Noise",
+                        number: 4,
+                        min: 0,
+                        max: 128,
+                        initial: 20,
+                      ),
+                      ControlInfo(
+                        name: "Tone Color",
+                        number: 2,
+                        min: 0,
+                        max: 128,
+                        initial: 60,
+                      ),
                     ],
                   ),
                   InstrumentSection(
                     name: "Saxophone",
                     instrument: Saxophone(),
                     controls: const [
-                      ControlInfo(name: "Vibrato Depth", number: 1, min: 0, max: 128, initial: 30),
-                      ControlInfo(name: "Vibrato Speed", number: 11, min: 0, max: 128, initial: 50),
-                      ControlInfo(name: "Reed Stiffness", number: 2, min: 0, max: 128, initial: 40),
-                      ControlInfo(name: "Breath Noise", number: 4, min: 0, max: 128, initial: 15),
+                      ControlInfo(
+                        name: "Vibrato Depth",
+                        number: 1,
+                        min: 0,
+                        max: 128,
+                        initial: 30,
+                      ),
+                      ControlInfo(
+                        name: "Vibrato Speed",
+                        number: 11,
+                        min: 0,
+                        max: 128,
+                        initial: 50,
+                      ),
+                      ControlInfo(
+                        name: "Reed Stiffness",
+                        number: 2,
+                        min: 0,
+                        max: 128,
+                        initial: 40,
+                      ),
+                      ControlInfo(
+                        name: "Breath Noise",
+                        number: 4,
+                        min: 0,
+                        max: 128,
+                        initial: 15,
+                      ),
                     ],
                   ),
                   ShakersSection(soloud: _soloud!),
@@ -170,8 +217,11 @@ class _InstrumentSectionState extends State<InstrumentSection> {
 
       final samples = widget.instrument.render(44100);
       final wavData = createWavFile(samples, 44100);
-      
-      final source = await SoLoud.instance.loadMem('${widget.name}_note', wavData);
+
+      final source = await SoLoud.instance.loadMem(
+        '${widget.name}_note',
+        wavData,
+      );
       await SoLoud.instance.play(source);
       await Future.delayed(const Duration(seconds: 1));
       await SoLoud.instance.disposeSource(source);
@@ -203,17 +253,19 @@ class _InstrumentSectionState extends State<InstrumentSection> {
             onChanged: (v) => setState(() => _pressure = v),
           ),
           const Divider(),
-          ...widget.controls.map((c) => Column(
-            children: [
-              Text(c.name),
-              Slider(
-                value: _values[c.number]!,
-                min: c.min,
-                max: c.max,
-                onChanged: (v) => setState(() => _values[c.number] = v),
-              ),
-            ],
-          )),
+          ...widget.controls.map(
+            (c) => Column(
+              children: [
+                Text(c.name),
+                Slider(
+                  value: _values[c.number]!,
+                  min: c.min,
+                  max: c.max,
+                  onChanged: (v) => setState(() => _values[c.number] = v),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: _isPlaying ? null : _play,
@@ -251,7 +303,7 @@ class _ShakersSectionState extends State<ShakersSection> {
 
       final samples = shakers.render(22050);
       final wavData = createWavFile(samples, 44100);
-      
+
       final source = await widget.soloud.loadMem('shaker', wavData);
       await widget.soloud.play(source);
       await Future.delayed(const Duration(milliseconds: 500));
@@ -274,10 +326,22 @@ class _ShakersSectionState extends State<ShakersSection> {
             isExpanded: true,
             items: const [
               DropdownMenuItem(value: Shakers.maraca, child: Text("Maraca")),
-              DropdownMenuItem(value: Shakers.tambourine, child: Text("Tambourine")),
-              DropdownMenuItem(value: Shakers.sleighBells, child: Text("Sleigh Bells")),
-              DropdownMenuItem(value: Shakers.bambooChimes, child: Text("Bamboo Chimes")),
-              DropdownMenuItem(value: Shakers.waterDrops, child: Text("Water Drops")),
+              DropdownMenuItem(
+                value: Shakers.tambourine,
+                child: Text("Tambourine"),
+              ),
+              DropdownMenuItem(
+                value: Shakers.sleighBells,
+                child: Text("Sleigh Bells"),
+              ),
+              DropdownMenuItem(
+                value: Shakers.bambooChimes,
+                child: Text("Bamboo Chimes"),
+              ),
+              DropdownMenuItem(
+                value: Shakers.waterDrops,
+                child: Text("Water Drops"),
+              ),
             ],
             onChanged: (v) => setState(() => _selectedType = v!),
           ),
@@ -331,7 +395,12 @@ class _DrummerSectionState extends State<DrummerSection> {
     DrumPad(name: "Kick", index: 1, midiNote: 36, color: Colors.deepOrange),
     DrumPad(name: "Snare", index: 2, midiNote: 38, color: Colors.blue),
     DrumPad(name: "Low Tom", index: 3, midiNote: 41, color: Colors.purple),
-    DrumPad(name: "Mid Tom", index: 4, midiNote: 45, color: Colors.purpleAccent),
+    DrumPad(
+      name: "Mid Tom",
+      index: 4,
+      midiNote: 45,
+      color: Colors.purpleAccent,
+    ),
     DrumPad(name: "High Tom", index: 5, midiNote: 48, color: Colors.deepPurple),
     DrumPad(name: "Hi-Hat", index: 6, midiNote: 42, color: Colors.amber),
     DrumPad(name: "Ride", index: 7, midiNote: 51, color: Colors.orange),
@@ -343,7 +412,7 @@ class _DrummerSectionState extends State<DrummerSection> {
 
   void _playPad(DrumPad pad) async {
     setState(() => _activePadIndex = pad.index);
-    
+
     // Quick reset of active state for visual feedback
     Future.delayed(const Duration(milliseconds: 100), () {
       if (mounted) setState(() => _activePadIndex = null);
@@ -353,10 +422,10 @@ class _DrummerSectionState extends State<DrummerSection> {
       drummer.setPitch(_pitch);
       final freq = midiToFreq(pad.midiNote);
       drummer.noteOn(pad.index.toDouble(), 0.9, freq);
-      
+
       final samples = drummer.render(22050);
       final wavData = createWavFile(samples, 44100);
-      
+
       final source = await widget.soloud.loadMem('drum_${pad.index}', wavData);
       await widget.soloud.play(source);
       await Future.delayed(const Duration(milliseconds: 500));
@@ -377,8 +446,10 @@ class _DrummerSectionState extends State<DrummerSection> {
               const Icon(Icons.speed, color: Colors.grey),
               const SizedBox(width: 10),
               Expanded(
-                child: Text("Drum Pitch: ${_pitch.toStringAsFixed(2)}x", 
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+                child: Text(
+                  "Drum Pitch: ${_pitch.toStringAsFixed(2)}x",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
               Slider(
                 value: _pitch,
@@ -401,27 +472,37 @@ class _DrummerSectionState extends State<DrummerSection> {
               itemBuilder: (context, i) {
                 final pad = _pads[i];
                 final bool isActive = _activePadIndex == pad.index;
-                
+
                 return GestureDetector(
                   onTapDown: (_) => _playPad(pad),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 50),
                     decoration: BoxDecoration(
-                      color: isActive ? pad.color.withAlpha(128) : pad.color.withAlpha(51),
+                      color: isActive
+                          ? pad.color.withAlpha(128)
+                          : pad.color.withAlpha(51),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isActive ? pad.color : pad.color.withAlpha(128),
                         width: isActive ? 3 : 1.5,
                       ),
-                      boxShadow: isActive ? [
-                        BoxShadow(color: pad.color.withAlpha(102), blurRadius: 10, spreadRadius: 2)
-                      ] : [],
+                      boxShadow: isActive
+                          ? [
+                              BoxShadow(
+                                color: pad.color.withAlpha(102),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                          : [],
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          pad.index == 0 ? Icons.record_voice_over : Icons.album, 
+                          pad.index == 0
+                              ? Icons.record_voice_over
+                              : Icons.album,
                           color: pad.color,
                           size: isActive ? 32 : 28,
                         ),
@@ -430,7 +511,9 @@ class _DrummerSectionState extends State<DrummerSection> {
                           pad.name,
                           style: TextStyle(
                             color: pad.color.withAlpha(230),
-                            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isActive
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                             fontSize: 12,
                           ),
                           textAlign: TextAlign.center,
@@ -458,12 +541,12 @@ Uint8List createWavFile(List<double> samples, int sampleRate) {
   final numSamples = samples.length;
   final dataSize = numSamples * 2;
   final buffer = ByteData(44 + dataSize);
-  
+
   // RIFF header
   buffer.setUint32(0, 0x52494646, Endian.big); // "RIFF"
   buffer.setUint32(4, 36 + dataSize, Endian.little);
   buffer.setUint32(8, 0x57415645, Endian.big); // "WAVE"
-  
+
   // fmt chunk
   buffer.setUint32(12, 0x666D7420, Endian.big); // "fmt "
   buffer.setUint32(16, 16, Endian.little);
@@ -473,18 +556,18 @@ Uint8List createWavFile(List<double> samples, int sampleRate) {
   buffer.setUint32(28, sampleRate * 2, Endian.little);
   buffer.setUint16(32, 2, Endian.little);
   buffer.setUint16(34, 16, Endian.little);
-  
+
   // data chunk
   buffer.setUint32(36, 0x64617461, Endian.big);
   buffer.setUint32(40, dataSize, Endian.little);
-  
+
   var offset = 44;
   for (var sample in samples) {
     final intSample = (sample * 32767).clamp(-32768, 32767).toInt();
     buffer.setInt16(offset, intSample, Endian.little);
     offset += 2;
   }
-  
+
   return buffer.buffer.asUint8List();
 }
 
@@ -512,7 +595,7 @@ class _ModalBarSectionState extends State<ModalBarSection> {
 
       final samples = modalBar.render(22050);
       final wavData = createWavFile(samples, 44100);
-      
+
       final source = await widget.soloud.loadMem('modalbar_note', wavData);
       await widget.soloud.play(source);
       await Future.delayed(const Duration(seconds: 1));
@@ -534,10 +617,22 @@ class _ModalBarSectionState extends State<ModalBarSection> {
             value: _preset,
             items: const [
               DropdownMenuItem(value: ModalBar.marimba, child: Text("Marimba")),
-              DropdownMenuItem(value: ModalBar.vibraphone, child: Text("Vibraphone")),
-              DropdownMenuItem(value: ModalBar.agogo, child: Text("Agogo (African)")),
-              DropdownMenuItem(value: ModalBar.wood1, child: Text("Wood Block 1")),
-              DropdownMenuItem(value: ModalBar.wood2, child: Text("Wood Block 2")),
+              DropdownMenuItem(
+                value: ModalBar.vibraphone,
+                child: Text("Vibraphone"),
+              ),
+              DropdownMenuItem(
+                value: ModalBar.agogo,
+                child: Text("Agogo (African)"),
+              ),
+              DropdownMenuItem(
+                value: ModalBar.wood1,
+                child: Text("Wood Block 1"),
+              ),
+              DropdownMenuItem(
+                value: ModalBar.wood2,
+                child: Text("Wood Block 2"),
+              ),
               DropdownMenuItem(value: ModalBar.beats, child: Text("Beats")),
               DropdownMenuItem(value: ModalBar.clump, child: Text("Clump")),
             ],
@@ -558,7 +653,10 @@ class _ModalBarSectionState extends State<ModalBarSection> {
               minimumSize: const Size(200, 60),
               backgroundColor: Colors.orange,
             ),
-            child: const Text("Strike!", style: TextStyle(fontSize: 20, color: Colors.white)),
+            child: const Text(
+              "Strike!",
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ),
           ),
           const SizedBox(height: 20),
           const Text(

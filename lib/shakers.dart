@@ -17,10 +17,14 @@ class Shakers {
     }
 
     _ffiInit = _lib.lookupFunction<_InitNative, _InitDart>('shakers_init');
-    _ffiNoteOn = _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('shakers_noteOn');
-    _ffiControlChange = _lib.lookupFunction<_ControlChangeNative, _ControlChangeDart>('shakers_controlChange');
-    _ffiRender = _lib.lookupFunction<_RenderNative, _RenderDart>('shakers_render');
-    
+    _ffiNoteOn =
+        _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('shakers_noteOn');
+    _ffiControlChange =
+        _lib.lookupFunction<_ControlChangeNative, _ControlChangeDart>(
+            'shakers_controlChange');
+    _ffiRender =
+        _lib.lookupFunction<_RenderNative, _RenderDart>('shakers_render');
+
     if (type != 0) {
       init(type);
     }
@@ -28,20 +32,21 @@ class Shakers {
 
   void init(int type) => _ffiInit(type);
   void noteOn(double instrument, double amp) => _ffiNoteOn(instrument, amp);
-  
+
   /// Control change parameters:
   /// - 2: Shake Energy (0-128)
   /// - 4: System Decay (0-128)
   /// - 11: Number Of Objects (0-128)
   /// - 1: Resonance Frequency (0-128)
   /// - 128: Shake Energy (0-128)
-  void controlChange(int number, double value) => _ffiControlChange(number, value);
+  void controlChange(int number, double value) =>
+      _ffiControlChange(number, value);
 
   List<double> render(int frameCount) {
     final ptr = _ffiRender(frameCount);
     return ptr.asTypedList(frameCount).toList();
   }
-  
+
   // Instrument types
   static const int maraca = 0;
   static const int cabasa = 1;

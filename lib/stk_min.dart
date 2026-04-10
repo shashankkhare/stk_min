@@ -36,14 +36,25 @@ class StkMin {
     if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
       final String exeDir = p.dirname(Platform.resolvedExecutable);
       String diskRawwaveDir;
-      
+
       if (Platform.isMacOS) {
         // macOS App Bundle: Contents/Frameworks/App.framework/Resources/flutter_assets/
         // Actually, for debug run it might be different, but let's try the standard bundle structure.
-        diskRawwaveDir = p.join(exeDir, '..', 'Frameworks', 'App.framework', 'Resources', 'flutter_assets', 'packages', 'stk_min', 'assets', 'rawwaves');
+        diskRawwaveDir = p.join(
+            exeDir,
+            '..',
+            'Frameworks',
+            'App.framework',
+            'Resources',
+            'flutter_assets',
+            'packages',
+            'stk_min',
+            'assets',
+            'rawwaves');
       } else {
         // Linux/Windows: data/flutter_assets/
-        diskRawwaveDir = p.join(exeDir, 'data', 'flutter_assets', 'packages', 'stk_min', 'assets', 'rawwaves');
+        diskRawwaveDir = p.join(exeDir, 'data', 'flutter_assets', 'packages',
+            'stk_min', 'assets', 'rawwaves');
       }
 
       final Directory dir = Directory(diskRawwaveDir);
@@ -52,8 +63,8 @@ class StkMin {
         // Optimization: return immediately if found on disk.
         return;
       }
-      
-      // Fallback: If not found in the standard data/ bundle (e.g. specific dev setup), 
+
+      // Fallback: If not found in the standard data/ bundle (e.g. specific dev setup),
       // let it fall through to the extraction logic if supported.
     }
 
@@ -68,12 +79,13 @@ class StkMin {
     for (final wave in _rawwaves) {
       final String assetPath = 'packages/stk_min/assets/rawwaves/$wave';
       final String targetPath = p.join(rawwaveDir, wave);
-      
+
       final File targetFile = File(targetPath);
       // For now, always copy to ensure we have the latest.
       // Optimization: check if exists or version.
       final ByteData data = await rootBundle.load(assetPath);
-      final List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      final List<int> bytes =
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
       await targetFile.writeAsBytes(bytes, flush: true);
     }
 
@@ -88,9 +100,10 @@ void setRawwavePath(String path) {
   } else {
     lib = ffi.DynamicLibrary.process();
   }
-  final void Function(ffi.Pointer<Utf8>) setPath = lib
-      .lookupFunction<ffi.Void Function(ffi.Pointer<Utf8>), void Function(ffi.Pointer<Utf8>)>('stk_setRawwavePath');
-  
+  final void Function(ffi.Pointer<Utf8>) setPath = lib.lookupFunction<
+      ffi.Void Function(ffi.Pointer<Utf8>),
+      void Function(ffi.Pointer<Utf8>)>('stk_setRawwavePath');
+
   // Ensure the path ends with a separator as STK might expect it
   String finalPath = path;
   if (!finalPath.endsWith(Platform.pathSeparator)) {
@@ -115,7 +128,7 @@ class Flute {
       _lib = ffi.DynamicLibrary.open('libstk_min.so');
     } else {
       // iOS, macOS, Linux, and Windows (if loaded by runner)
-      // Note: For Windows, we might need explicit load if process() fails, 
+      // Note: For Windows, we might need explicit load if process() fails,
       // but let's stick to what worked for Linux for now.
       // Actually, let's keep it robust.
       _lib = ffi.DynamicLibrary.process();
@@ -123,20 +136,23 @@ class Flute {
 
     _ffiInit = _lib.lookupFunction<_InitNative, _InitDart>('stk_init');
     _ffiNoteOn = _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('stk_noteOn');
-    _ffiControlChange = _lib.lookupFunction<_ControlChangeNative, _ControlChangeDart>('stk_controlChange');
+    _ffiControlChange =
+        _lib.lookupFunction<_ControlChangeNative, _ControlChangeDart>(
+            'stk_controlChange');
     _ffiRender = _lib.lookupFunction<_RenderNative, _RenderDart>('stk_render');
   }
 
   void init(double freq) => _ffiInit(freq);
   void noteOn(double freq, double amp) => _ffiNoteOn(freq, amp);
-  
+
   /// Control change parameters:
   /// - 1: Vibrato Gain (0-128)
   /// - 2: Jet Delay (0-128)
   /// - 4: Noise Gain (0-128)
   /// - 11: Vibrato Frequency (0-128)
   /// - 128: Breath Pressure (0-128)
-  void controlChange(int number, double value) => _ffiControlChange(number, value);
+  void controlChange(int number, double value) =>
+      _ffiControlChange(number, value);
 
   List<double> render(int frameCount) {
     final ptr = _ffiRender(frameCount);
@@ -156,4 +172,3 @@ typedef _ControlChangeDart = void Function(int, double);
 
 typedef _RenderNative = ffi.Pointer<ffi.Float> Function(ffi.Int32);
 typedef _RenderDart = ffi.Pointer<ffi.Float> Function(int);
-

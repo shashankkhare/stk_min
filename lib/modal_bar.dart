@@ -27,16 +27,21 @@ class ModalBar {
     }
 
     _ffiInit = _lib.lookupFunction<_InitNative, _InitDart>('modalbar_init');
-    _ffiNoteOn = _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('modalbar_noteOn');
-    _ffiControlChange = _lib.lookupFunction<_ControlChangeNative, _ControlChangeDart>('modalbar_controlChange');
-    _ffiRender = _lib.lookupFunction<_RenderNative, _RenderDart>('modalbar_render');
+    _ffiNoteOn =
+        _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('modalbar_noteOn');
+    _ffiControlChange =
+        _lib.lookupFunction<_ControlChangeNative, _ControlChangeDart>(
+            'modalbar_controlChange');
+    _ffiRender =
+        _lib.lookupFunction<_RenderNative, _RenderDart>('modalbar_render');
   }
 
   void init(int preset) => _ffiInit(preset);
 
   void noteOn(double freq, double amp) => _ffiNoteOn(freq, amp);
 
-  void controlChange(int number, double value) => _ffiControlChange(number, value);
+  void controlChange(int number, double value) =>
+      _ffiControlChange(number, value);
 
   List<double> render(int frameCount) {
     final ptr = _ffiRender(frameCount);
