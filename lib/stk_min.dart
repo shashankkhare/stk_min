@@ -31,6 +31,32 @@ class StkMin {
   /// Initializes the STK engine by extracting raw samples to the device's local storage.
   /// This should be called once at app startup before using any instruments that require samples.
   static Future<void> initialize() async {
+    // For Desktop platforms, we can find rawwaves directly on disk.
+    // This avoids using path_provider and rootBundle, which can hang in background isolates on Linux/Windows/macOS.
+    if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+      final String exeDir = p.dirname(Platform.resolvedExecutable);
+      String diskRawwaveDir;
+      
+      if (Platform.isMacOS) {
+        // macOS App Bundle: Contents/Frameworks/App.framework/Resources/flutter_assets/
+        // Actually, for debug run it might be different, but let's try the standard bundle structure.
+        diskRawwaveDir = p.join(exeDir, '..', 'Frameworks', 'App.framework', 'Resources', 'flutter_assets', 'packages', 'stk_min', 'assets', 'rawwaves');
+      } else {
+        // Linux/Windows: data/flutter_assets/
+        diskRawwaveDir = p.join(exeDir, 'data', 'flutter_assets', 'packages', 'stk_min', 'assets', 'rawwaves');
+      }
+
+      final Directory dir = Directory(diskRawwaveDir);
+      if (await dir.exists()) {
+        setRawwavePath(diskRawwaveDir);
+        // Optimization: return immediately if found on disk.
+        return;
+      }
+      
+      // Fallback: If not found in the standard data/ bundle (e.g. specific dev setup), 
+      // let it fall through to the extraction logic if supported.
+    }
+
     final Directory supportDir = await getApplicationSupportDirectory();
     final String rawwaveDir = p.join(supportDir.path, 'rawwaves');
     final Directory dir = Directory(rawwaveDir);

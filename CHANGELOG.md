@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.5.0
+
+* **Desktop Initialization**: Added direct disk-based asset lookup for Linux, Windows, and macOS to support background isolates.
+* **Initialization Optimization**: Avoids asset extraction on desktop platforms if the assets are already available in the app bundle.
+
 ## 0.4.2
 
 * **Drummer Frequency Fix**: Implemented explicit frequency-based triggering to resolve "vocal sample" glitch.
