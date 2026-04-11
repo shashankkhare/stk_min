@@ -13,11 +13,11 @@ A minimalist, cross-platform Flutter wrapper for the [Synthesis ToolKit (STK)](h
 
 ## Currently Supported Instruments
 
-- **Flute**: Physical model of a flute with breath control, vibrato, and tonal adjustments
-- **Saxophone**: Physical model of a saxophone with reed stiffness control, vibrato, and breath dynamics
-- **Shakers**: Physically informed stochastic event modeling (PhISEM) of various percussion instruments (Maracas, Tambourine, Sleighbells, etc.)
-- **Drummer**: General MIDI-compatible drum kit using audio samples
-- **ModalBar**: Resonant bar instruments with presets for **Marimba**, **Vibraphone**, **Agogo** (African percussion), and more.
+- **Drummer**: Kick, Snare, Toms, Hi-hat, Ride, Crash, Cowbell, Tambourine, and **Indian Tabla** (Dayan and Bayan) with frequency-based tuning for traditional Sa/Shruti alignment.
+- **Flute**: Physically modeled flute with control over vibrato, breath, and jet delay.
+- **Saxophone**: Expressive saxophone model with reed and blow pressure controls.
+- **Shakers**: A collection of 25+ shaker instruments (Maraca, Cabasa, Water Drops, etc.).
+- **Modal Instruments**: Marimba, Vibraslap, Agogo, WoodBlocks.
 
 ## Installation
 
@@ -25,7 +25,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  stk_min: ^0.2.0
+  stk_min: ^0.5.0
 ```
 
 Then run:

@@ -26,6 +26,9 @@ class StkMin {
     'tomhidrm.raw',
     'tomlowdr.raw',
     'tommiddr.raw',
+    'tabla_na.raw',
+    'tabla_din.raw',
+    'tabla_tee.raw',
   ];
 
   /// Initializes the STK engine by extracting raw samples to the device's local storage.
@@ -34,40 +37,58 @@ class StkMin {
     // For Desktop platforms, we can find rawwaves directly on disk.
     // This avoids using path_provider and rootBundle, which can hang in background isolates on Linux/Windows/macOS.
     if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+      print("💡 [StkMin] Initializing for Desktop platform: ${Platform.operatingSystem}");
+      
+      final List<String> potentialPaths = [];
+      
+      // 1. Bundle path (relative to executable)
       final String exeDir = p.dirname(Platform.resolvedExecutable);
-      String diskRawwaveDir;
-
+      print("💡 [StkMin] Executable directory: $exeDir");
+      
       if (Platform.isMacOS) {
-        // macOS App Bundle: Contents/Frameworks/App.framework/Resources/flutter_assets/
-        // Actually, for debug run it might be different, but let's try the standard bundle structure.
-        diskRawwaveDir = p.join(
-            exeDir,
-            '..',
-            'Frameworks',
-            'App.framework',
-            'Resources',
-            'flutter_assets',
-            'packages',
-            'stk_min',
-            'assets',
-            'rawwaves');
+        potentialPaths.add(p.join(exeDir, '..', 'Frameworks', 'App.framework', 'Resources', 'flutter_assets', 'packages', 'stk_min', 'assets', 'rawwaves'));
       } else {
-        // Linux/Windows: data/flutter_assets/
-        diskRawwaveDir = p.join(exeDir, 'data', 'flutter_assets', 'packages',
-            'stk_min', 'assets', 'rawwaves');
+        potentialPaths.add(p.join(exeDir, 'data', 'flutter_assets', 'packages', 'stk_min', 'assets', 'rawwaves'));
+      }
+      
+      // 2. Local development path (relative to current working directory)
+      potentialPaths.add(p.join(Directory.current.path, 'assets', 'rawwaves'));
+      potentialPaths.add(p.join(Directory.current.path, 'packages', 'stk_min', 'assets', 'rawwaves'));
+      potentialPaths.add(p.join(Directory.current.path, '..', 'stk_min', 'assets', 'rawwaves'));
+      
+      // 3. Absolute known path for this environment
+      potentialPaths.add('/home/shashankkhare/AndroidStudioProjects/stk_min/assets/rawwaves');
+      
+      // 3. Fallback to manual home directory construction (to avoid path_provider hang)
+      if (Platform.isLinux) {
+        final home = Platform.environment['HOME'];
+        if (home != null) {
+          potentialPaths.add(p.join(home, '.local', 'share', 'stk_min', 'rawwaves'));
+        }
       }
 
-      final Directory dir = Directory(diskRawwaveDir);
-      if (await dir.exists()) {
-        setRawwavePath(diskRawwaveDir);
-        // Optimization: return immediately if found on disk.
-        return;
+      for (final path in potentialPaths) {
+        print("💡 [StkMin] Checking path: $path");
+        final Directory dir = Directory(path);
+        if (await dir.exists()) {
+          print("✅ [StkMin] Found rawwaves at: $path");
+          setRawwavePath(path);
+          return;
+        }
       }
 
-      // Fallback: If not found in the standard data/ bundle (e.g. specific dev setup),
-      // let it fall through to the extraction logic if supported.
+      print("⚠️ [StkMin] No rawwaves found in standard disk locations.");
+      
+      // On Desktop, if we reach here and we are in an isolate, calling getApplicationSupportDirectory() will HANG.
+      // We've already tried manual fallback in ~/.local/share, so we should probably stop here or try one last manual path.
+      if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+         print("⚠️ [StkMin] Desktop check complete. No assets found. Aborting to prevent isolate hang.");
+         return; 
+      }
     }
 
+    // Default logic for Android/iOS or if Desktop fails gracefully
+    print("💡 [StkMin] Falling back to extraction logic (Android/iOS style)...");
     final Directory supportDir = await getApplicationSupportDirectory();
     final String rawwaveDir = p.join(supportDir.path, 'rawwaves');
     final Directory dir = Directory(rawwaveDir);
@@ -82,11 +103,13 @@ class StkMin {
 
       final File targetFile = File(targetPath);
       // For now, always copy to ensure we have the latest.
-      // Optimization: check if exists or version.
-      final ByteData data = await rootBundle.load(assetPath);
-      final List<int> bytes =
-          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-      await targetFile.writeAsBytes(bytes, flush: true);
+      try {
+        final ByteData data = await rootBundle.load(assetPath);
+        final List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+        await targetFile.writeAsBytes(bytes, flush: true);
+      } catch (e) {
+        print("❌ [StkMin] Failed to load asset $assetPath: $e");
+      }
     }
 
     setRawwavePath(rawwaveDir);

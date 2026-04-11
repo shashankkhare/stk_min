@@ -34,7 +34,10 @@ char waveNames[DRUM_NUMWAVES][16] =
     "ridecymb.raw",
     "crashcym.raw", 
     "cowbell1.raw", 
-    "tambourn.raw"
+    "tambourn.raw",
+    "tabla_na.raw",
+    "tabla_din.raw",
+    "tabla_tee.raw"
   };
 
 Drummer :: Drummer( void ) : Instrmnt()
@@ -108,9 +111,14 @@ void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude, StkFloat freque
   // Set the playback rate based on requested frequency.
   // We assume the original samples are tuned roughly to their MIDI pitch 
   // (Kick=36/65.4Hz, Snare=38/73.4Hz, Hat=42/92.5Hz).
-  StkFloat baseFreq = 65.41; // Default Base
+  StkFloat baseFreq = 65.41; // Default Base (Kick)
   if (sampleIndex == 2) baseFreq = 73.42; // Snare
-  if (sampleIndex >= 6) baseFreq = 92.50; // Hi-hat range
+  if (sampleIndex >= 6 && sampleIndex <= 10) baseFreq = 92.50; // Hi-hat and percussion range
+  
+  // Tabla Tuning: Sa for Dayan, Fraction for Bayan
+  if (sampleIndex == 11) baseFreq = 261.63; // Tabla Na (Dayan) - C4
+  if (sampleIndex == 12) baseFreq = 130.81; // Tabla Din (Bayan) - C3
+  if (sampleIndex == 13) baseFreq = 261.63; // Tabla Tee (Dayan) - C4
 
   StkFloat rate = (frequency / baseFreq) * pitch_ * (22050.0 / Stk::sampleRate());
   waves_[iWave].setRate( rate );

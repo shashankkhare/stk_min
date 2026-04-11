@@ -9,6 +9,22 @@ class Drummer {
   late final void Function(double) _ffiSetPitch;
   late final ffi.Pointer<ffi.Float> Function(int) _ffiRender;
 
+  /// Instrument indices
+  static const int dope = 0;
+  static const int bass = 1;
+  static const int snare = 2;
+  static const int tomLow = 3;
+  static const int tomMid = 4;
+  static const int tomHigh = 5;
+  static const int hihat = 6;
+  static const int ride = 7;
+  static const int crash = 8;
+  static const int cowbell = 9;
+  static const int tambourine = 10;
+  static const int tablaNa = 11;
+  static const int tablaDin = 12;
+  static const int tablaTee = 13;
+
   Drummer() {
     if (Platform.isAndroid) {
       _lib = ffi.DynamicLibrary.open('libstk_min.so');
@@ -27,9 +43,9 @@ class Drummer {
   }
 
   /// Trigger a drum sound.
-  /// [instrument] direct sample index (0=Dope, 1=Bass, 2=Snare, 6=Hat).
+  /// [instrument] direct sample index (see constants like [tablaNa]).
   /// [amp] volume (0.0 - 1.0).
-  /// [frequency] playback frequency in Hz.
+  /// [frequency] playback frequency in Hz (used for manual tuning).
   void noteOn(double instrument, double amp, double frequency) =>
       _ffiNoteOn(instrument, amp, frequency);
 

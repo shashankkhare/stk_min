@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 0.6.0
+
+* **Indian Percussion Support**: Added **Tabla** instruments (Dayan and Bayan) to the `Drummer` kit.
+    * New strokes: **Tabla Na** (Dayan/Right), **Tabla Din** (Bayan/Left), and **Tabla Tee** (Dayan Mute).
+    * Enhanced `Drummer` engine with precise frequency-based tuning for realistic "Sa" and "Shruti" alignment.
+* **High-Fidelity Audio Fix**: Correctly configured global endianness (`__LITTLE_ENDIAN__`) across all platforms (Linux, Windows, iOS, macOS), ensuring clean 16-bit PCM playback for all instruments.
+* **Premium UI**: Added specialized concentric circular pads in the example app with a Saffron and Charcoal aesthetic.
+* **Tuning Interface**: Added interactive root note (Sa) and bass depth (Shruti) controls in the example app.
+* **API Expansion**: Added direct constants for all drum instruments in the `Drummer` class.
+
+## 0.5.1
+
+* **Bug Fix**: Resolved a critical hang on Linux/Desktop when initializing `StkMin` in background isolates.
+* **Initialization Optimization**: Improved asset discovery logic to search multiple potential paths and bypassed hanging `path_provider` calls on Desktop.
+
 ## 0.5.0
 
 * **Desktop Initialization**: Added direct disk-based asset lookup for Linux, Windows, and macOS to support background isolates.
@@ -24,7 +39,6 @@
 * **Dependencies**: Added `path_provider` and `path` to manage cross-platform filesystem locations.
 
 ## 0.3.1
-
 
 * **SEO Optimization**: Updated package description with targeted keywords (physical modeling, percussion, FFI) to improve search discoverability on pub.dev.
 
@@ -59,3 +73,7 @@
   * Breath pressure
 * Complete example app with SoLoud audio playback integration
 * Comprehensive documentation and usage examples
+
+## License
+
+This plugin is licensed under the MIT License. See [LICENSE](LICENSE) for details.

@@ -49,7 +49,7 @@ apply_standard_settings(${PLUGIN_NAME})
 # exported should be explicitly exported with the FLUTTER_PLUGIN_EXPORT macro.
 set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_VISIBILITY_PRESET hidden)
-target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL __WINDOWS_DS__)
+target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL __WINDOWS_DS__ __LITTLE_ENDIAN__)
 target_include_directories(${PLUGIN_NAME} PRIVATE "../src")
 
 # Source include directories and library dependencies. Add any plugin-specific

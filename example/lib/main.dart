@@ -389,9 +389,11 @@ class DrummerSection extends StatefulWidget {
 class _DrummerSectionState extends State<DrummerSection> {
   final drummer = Drummer();
   double _pitch = 1.0;
+  double _tablaSa = 261.63; // Root 'Sa' (C4 default)
+  double _bayanShruti = 0.45; // Fraction for Bayan
   int? _activePadIndex;
 
-  static const List<DrumPad> _pads = [
+  static final List<DrumPad> _pads = [
     DrumPad(name: "Kick", index: 1, midiNote: 36, color: Colors.deepOrange),
     DrumPad(name: "Snare", index: 2, midiNote: 38, color: Colors.blue),
     DrumPad(name: "Low Tom", index: 3, midiNote: 41, color: Colors.purple),
@@ -407,6 +409,9 @@ class _DrummerSectionState extends State<DrummerSection> {
     DrumPad(name: "Crash", index: 8, midiNote: 49, color: Colors.redAccent),
     DrumPad(name: "Cowbell", index: 9, midiNote: 56, color: Colors.teal),
     DrumPad(name: "Tambourine", index: 10, midiNote: 54, color: Colors.cyan),
+    DrumPad(name: "Tabla Na", index: 11, midiNote: 60, color: Colors.orange.shade700), // Dayan
+    DrumPad(name: "Tabla Din", index: 12, midiNote: 48, color: Colors.brown), // Bayan
+    DrumPad(name: "Tabla Tee", index: 13, midiNote: 60, color: Colors.orange.shade300), // Dayan Mute
     DrumPad(name: "Dope", index: 0, midiNote: 24, color: Colors.black54),
   ];
 
@@ -460,13 +465,97 @@ class _DrummerSectionState extends State<DrummerSection> {
             ],
           ),
           const SizedBox(height: 20),
+          // --- Tabla Tuning Controls ---
+          Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: Colors.orange.withAlpha(20),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: Colors.orange.withAlpha(50)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.music_note, color: Colors.orange),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "Tabla Sa: ${_tablaSa.toStringAsFixed(1)} Hz",
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown),
+                      ),
+                    ),
+                    Slider(
+                      value: _tablaSa,
+                      min: 150.0,
+                      max: 440.0,
+                      activeColor: Colors.orange,
+                      onChanged: (v) => setState(() => _tablaSa = v),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Icon(Icons.waves, color: Colors.blueGrey),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "Bayan Shruti: ${_bayanShruti.toStringAsFixed(2)}x",
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                      ),
+                    ),
+                    Slider(
+                      value: _bayanShruti,
+                      min: 0.3,
+                      max: 0.8,
+                      activeColor: Colors.blueGrey,
+                      onChanged: (v) => setState(() => _bayanShruti = v),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // --- Tabla Simulator ---
+          const Text("Tabla Simulator", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.brown)),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Bayan (Left / Bass) - Deep Charcoal/Silver
+              TablaDrum(
+                size: 140,
+                name: "Bayan",
+                color: const Color(0xFF2C3E50), // Charcoal
+                onTap: (zone) {
+                  _playRaw(Drummer.tablaDin, _bayanShruti); 
+                },
+              ),
+              // Dayan (Right / Treble) - Saffron/Bright
+              TablaDrum(
+                size: 130,
+                name: "Dayan",
+                color: const Color(0xFFE67E22), // Saffron Orange
+                onTap: (zone) {
+                  if (zone == 0) _playRaw(Drummer.tablaNa, 1.0); // Kinar (Sa)
+                  if (zone == 1) _playRaw(Drummer.tablaDin, 2.0); // Maidan (Pa)
+                  if (zone == 2) _playRaw(Drummer.tablaTee, 1.0); // Syahi (Mute)
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Divider(),
+          const Text("Full Kit", style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 10),
           Expanded(
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.4,
               ),
               itemCount: _pads.length,
               itemBuilder: (context, i) {
@@ -478,47 +567,16 @@ class _DrummerSectionState extends State<DrummerSection> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 50),
                     decoration: BoxDecoration(
-                      color: isActive
-                          ? pad.color.withAlpha(128)
-                          : pad.color.withAlpha(51),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isActive ? pad.color : pad.color.withAlpha(128),
-                        width: isActive ? 3 : 1.5,
-                      ),
-                      boxShadow: isActive
-                          ? [
-                              BoxShadow(
-                                color: pad.color.withAlpha(102),
-                                blurRadius: 10,
-                                spreadRadius: 2,
-                              ),
-                            ]
-                          : [],
+                      color: isActive ? pad.color.withAlpha(128) : pad.color.withAlpha(40),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: isActive ? pad.color : pad.color.withAlpha(100)),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          pad.index == 0
-                              ? Icons.record_voice_over
-                              : Icons.album,
-                          color: pad.color,
-                          size: isActive ? 32 : 28,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          pad.name,
-                          style: TextStyle(
-                            color: pad.color.withAlpha(230),
-                            fontWeight: isActive
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                    child: Center(
+                      child: Text(
+                        pad.name,
+                        style: TextStyle(fontSize: 10, color: pad.color),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
                 );
@@ -527,6 +585,102 @@ class _DrummerSectionState extends State<DrummerSection> {
           ),
         ],
       ),
+    );
+  }
+
+  // Specialized play for Tabla logic
+  void _playRaw(int index, double freqMult) async {
+    try {
+      drummer.setPitch(_pitch);
+      // Tuning: Sa is 261.63. 
+      final targetFreq = _tablaSa * freqMult;
+      
+      drummer.noteOn(index.toDouble(), 0.9, targetFreq);
+
+      final samples = drummer.render(22050);
+      final wavData = createWavFile(samples, 44100);
+
+      final source = await widget.soloud.loadMem('tabla_$index', wavData);
+      await widget.soloud.play(source);
+      await Future.delayed(const Duration(milliseconds: 500));
+      await widget.soloud.disposeSource(source);
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
+  }
+}
+
+class TablaDrum extends StatelessWidget {
+  final double size;
+  final String name;
+  final Color color;
+  final Function(int zone) onTap;
+
+  const TablaDrum({
+    super.key,
+    required this.size,
+    required this.name,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outer Ring (Kinar)
+            GestureDetector(
+              onTapDown: (_) => onTap(0),
+              child: Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color,
+                  border: Border.all(color: Colors.brown.shade300, width: 2),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(2, 2)),
+                  ],
+                ),
+              ),
+            ),
+            // Middle Ring (Maidan)
+            GestureDetector(
+              onTapDown: (_) => onTap(1),
+              child: Container(
+                width: size * 0.7,
+                height: size * 0.7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withOpacity(0.9),
+                  border: Border.all(color: Colors.brown.shade200, width: 1),
+                ),
+              ),
+            ),
+            // Syahi (Black Spot)
+            GestureDetector(
+              onTapDown: (_) => onTap(2),
+              child: Container(
+                width: size * 0.4,
+                height: size * 0.4,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black87,
+                  gradient: RadialGradient(
+                    colors: [Colors.grey.shade900, Colors.black],
+                    stops: const [0.8, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ],
     );
   }
 }

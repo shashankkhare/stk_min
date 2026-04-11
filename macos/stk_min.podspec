@@ -27,7 +27,8 @@ A new Flutter plugin project.
   s.platform = :osx, '10.11'
   s.pod_target_xcconfig = { 
     'DEFINES_MODULE' => 'YES',
-    'HEADER_SEARCH_PATHS' => '$(PODS_TARGET_SRCROOT)/../src'
+    'HEADER_SEARCH_PATHS' => '$(PODS_TARGET_SRCROOT)/../src',
+    'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) __LITTLE_ENDIAN__'
   }
   s.swift_version = '5.0'
 end

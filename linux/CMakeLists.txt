@@ -37,7 +37,7 @@ target_include_directories(stk_min_plugin PRIVATE
   "${FLUTTER_MANAGED_DIR}/ephemeral"
 )
 
-target_compile_definitions(stk_min_plugin PRIVATE FLUTTER_PLUGIN_IMPL __LINUX_ALSA__)
+target_compile_definitions(stk_min_plugin PRIVATE FLUTTER_PLUGIN_IMPL __LINUX_ALSA__ __LITTLE_ENDIAN__)
 
 target_link_libraries(stk_min_plugin PRIVATE flutter ${GTK_LIBRARIES})
 target_include_directories(stk_min_plugin INTERFACE
