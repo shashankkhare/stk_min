@@ -48,6 +48,7 @@ class Drummer : public Instrmnt
   */
   void noteOn( StkFloat frequency, StkFloat amplitude );
   void noteOn( StkFloat instrument, StkFloat amplitude, StkFloat frequency );
+  void noteOn( StkFloat instrument, StkFloat amplitude, StkFloat frequency, StkFloat resonance );
 
   //! Stop a note with the given amplitude (speed of decay).
   void noteOff( StkFloat amplitude );

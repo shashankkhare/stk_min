@@ -27,8 +27,9 @@ class StkMin {
     'tomlowdr.raw',
     'tommiddr.raw',
     'tabla_na.raw',
-    'tabla_din.raw',
+    'tabla_ghe.raw',
     'tabla_tee.raw',
+    'tabla_tak.raw',
   ];
 
   /// Initializes the STK engine by extracting raw samples to the device's local storage.

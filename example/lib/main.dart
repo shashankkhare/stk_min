@@ -529,7 +529,12 @@ class _DrummerSectionState extends State<DrummerSection> {
                 name: "Bayan",
                 color: const Color(0xFF2C3E50), // Charcoal
                 onTap: (zone) {
-                  _playRaw(Drummer.tablaDin, _bayanShruti); 
+                  // Outer = Resonant Ghe, Inner = Muted Ke
+                  double resonance = 1.0;
+                  if (zone == 1) resonance = 0.5;
+                  if (zone == 2) resonance = 0.2;
+                  
+                  _playRaw(Drummer.tablaGhe, _bayanShruti, resonance: resonance); 
                 },
               ),
               // Dayan (Right / Treble) - Saffron/Bright
@@ -538,9 +543,9 @@ class _DrummerSectionState extends State<DrummerSection> {
                 name: "Dayan",
                 color: const Color(0xFFE67E22), // Saffron Orange
                 onTap: (zone) {
-                  if (zone == 0) _playRaw(Drummer.tablaNa, 1.0); // Kinar (Sa)
-                  if (zone == 1) _playRaw(Drummer.tablaDin, 2.0); // Maidan (Pa)
-                  if (zone == 2) _playRaw(Drummer.tablaTee, 1.0); // Syahi (Mute)
+                  if (zone == 0) _playRaw(Drummer.tablaNa, 1.0, resonance: 1.0); // Kinar (Sa)
+                  if (zone == 1) _playRaw(Drummer.tablaNa, 1.5, resonance: 0.6); // Maidan (higher/muffled)
+                  if (zone == 2) _playRaw(Drummer.tablaTee, 1.0, resonance: 0.1); // Syahi (Mute)
                 },
               ),
             ],
@@ -589,13 +594,12 @@ class _DrummerSectionState extends State<DrummerSection> {
   }
 
   // Specialized play for Tabla logic
-  void _playRaw(int index, double freqMult) async {
+  void _playRaw(int index, double freqMult, {double resonance = 1.0}) async {
     try {
       drummer.setPitch(_pitch);
-      // Tuning: Sa is 261.63. 
       final targetFreq = _tablaSa * freqMult;
       
-      drummer.noteOn(index.toDouble(), 0.9, targetFreq);
+      drummer.noteOn(index.toDouble(), 0.9, targetFreq, resonance);
 
       final samples = drummer.render(22050);
       final wavData = createWavFile(samples, 44100);

@@ -36,7 +36,7 @@ char waveNames[DRUM_NUMWAVES][16] =
     "cowbell1.raw", 
     "tambourn.raw",
     "tabla_na.raw",
-    "tabla_din.raw",
+    "tabla_ghe.raw",
     "tabla_tee.raw"
   };
 
@@ -55,12 +55,15 @@ Drummer :: ~Drummer( void )
 
 void Drummer :: noteOn( StkFloat frequency, StkFloat amplitude )
 {
-  // Satisfy interface by treating frequency as the instrument parameter
-  // and using it as a direct Hz value for the 3-param version.
-  this->noteOn( frequency, amplitude, frequency );
+  this->noteOn( frequency, amplitude, frequency, 1.0 );
 }
 
 void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude, StkFloat frequency )
+{
+  this->noteOn( instrument, amplitude, frequency, 1.0 );
+}
+
+void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude, StkFloat frequency, StkFloat resonance )
 {
   if ( amplitude < 0.0 || amplitude > 1.0 ) {
     oStream_ << "Drummer::noteOn: amplitude parameter is out of bounds!";
@@ -80,7 +83,9 @@ void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude, StkFloat freque
         nSounding_++;
       }
       waves_[iWave].reset();
-      filters_[iWave].setPole( 0.999 - (amplitude * 0.6) );
+      // Resonance (0.0 - 1.0) controls the filter damping.
+      // 1.0 = Bright/Resonant, 0.0 = Damped/Muted.
+      filters_[iWave].setPole( 0.999 - (amplitude * resonance * 0.6) );
       filters_[iWave].setGain( amplitude );
       break;
     }
@@ -104,20 +109,18 @@ void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude, StkFloat freque
     soundNumber_[iWave] = sampleIndex;
 
     waves_[iWave].openFile( (Stk::rawwavePath() + waveNames[ sampleIndex ]).c_str(), true );
-    filters_[iWave].setPole( 0.999 - (amplitude * 0.6) );
+    filters_[iWave].setPole( 0.999 - (amplitude * resonance * 0.6) );
     filters_[iWave].setGain( amplitude );
   }
 
   // Set the playback rate based on requested frequency.
-  // We assume the original samples are tuned roughly to their MIDI pitch 
-  // (Kick=36/65.4Hz, Snare=38/73.4Hz, Hat=42/92.5Hz).
   StkFloat baseFreq = 65.41; // Default Base (Kick)
   if (sampleIndex == 2) baseFreq = 73.42; // Snare
   if (sampleIndex >= 6 && sampleIndex <= 10) baseFreq = 92.50; // Hi-hat and percussion range
   
   // Tabla Tuning: Sa for Dayan, Fraction for Bayan
   if (sampleIndex == 11) baseFreq = 261.63; // Tabla Na (Dayan) - C4
-  if (sampleIndex == 12) baseFreq = 130.81; // Tabla Din (Bayan) - C3
+  if (sampleIndex == 12) baseFreq = 130.81; // Tabla Ghe (Bayan) - C3
   if (sampleIndex == 13) baseFreq = 261.63; // Tabla Tee (Dayan) - C4
 
   StkFloat rate = (frequency / baseFreq) * pitch_ * (22050.0 / Stk::sampleRate());

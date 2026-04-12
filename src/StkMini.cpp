@@ -110,6 +110,11 @@ EXPORT void drummer_noteOn(double instrument, double amp, double frequency) {
     drummer->noteOn(instrument, amp, frequency);
 }
 
+EXPORT void drummer_noteOnResonance(double instrument, double amp, double frequency, double resonance) {
+    if (!drummer) drummer = new stk::Drummer();
+    drummer->noteOn(instrument, amp, frequency, resonance);
+}
+
 EXPORT void drummer_noteOff(double amp) {
     if (drummer) drummer->noteOff(amp);
 }

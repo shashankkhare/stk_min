@@ -5,6 +5,7 @@ class Drummer {
   late final ffi.DynamicLibrary _lib;
 
   late final void Function(double, double, double) _ffiNoteOn;
+  late final void Function(double, double, double, double) _ffiNoteOnResonance;
   late final void Function(double) _ffiNoteOff;
   late final void Function(double) _ffiSetPitch;
   late final ffi.Pointer<ffi.Float> Function(int) _ffiRender;
@@ -22,7 +23,7 @@ class Drummer {
   static const int cowbell = 9;
   static const int tambourine = 10;
   static const int tablaNa = 11;
-  static const int tablaDin = 12;
+  static const int tablaGhe = 12;
   static const int tablaTee = 13;
 
   Drummer() {
@@ -34,6 +35,8 @@ class Drummer {
 
     _ffiNoteOn =
         _lib.lookupFunction<_NoteOnNative, _NoteOnDart>('drummer_noteOn');
+    _ffiNoteOnResonance = _lib.lookupFunction<_NoteOnResonanceNative,
+        _NoteOnResonanceDart>('drummer_noteOnResonance');
     _ffiNoteOff =
         _lib.lookupFunction<_NoteOffNative, _NoteOffDart>('drummer_noteOff');
     _ffiSetPitch =
@@ -46,8 +49,15 @@ class Drummer {
   /// [instrument] direct sample index (see constants like [tablaNa]).
   /// [amp] volume (0.0 - 1.0).
   /// [frequency] playback frequency in Hz (used for manual tuning).
-  void noteOn(double instrument, double amp, double frequency) =>
+  /// [resonance] tonal damping (0.0 = muted, 1.0 = bright). Defaults to 1.0.
+  void noteOn(double instrument, double amp, double frequency,
+      [double resonance = 1.0]) {
+    if (resonance == 1.0) {
       _ffiNoteOn(instrument, amp, frequency);
+    } else {
+      _ffiNoteOnResonance(instrument, amp, frequency, resonance);
+    }
+  }
 
   void noteOff(double amp) => _ffiNoteOff(amp);
 
@@ -62,6 +72,10 @@ class Drummer {
 // FFI typedef pairs
 typedef _NoteOnNative = ffi.Void Function(ffi.Double, ffi.Double, ffi.Double);
 typedef _NoteOnDart = void Function(double, double, double);
+
+typedef _NoteOnResonanceNative = ffi.Void Function(
+    ffi.Double, ffi.Double, ffi.Double, ffi.Double);
+typedef _NoteOnResonanceDart = void Function(double, double, double, double);
 
 typedef _NoteOffNative = ffi.Void Function(ffi.Double);
 typedef _NoteOffDart = void Function(double);
