@@ -1,5 +1,5 @@
 name: stk_min
-version: 0.6.0
+version: 0.7.0
 description: "A high-performance Flutter wrapper for the Synthesis ToolKit (STK). Features physically modeled musical instruments: Flute, Saxophone, Shakers, and Percussion (Drums, Tabla, Marimba, Agogo, WoodBlocks). Uses an optimized C++ FFI bridge for low-latency audio synthesis."
 homepage: https://github.com/shashankkhare/stk_min
 repository: https://github.com/shashankkhare/stk_min

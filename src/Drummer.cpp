@@ -37,7 +37,8 @@ char waveNames[DRUM_NUMWAVES][16] =
     "tambourn.raw",
     "tabla_na.raw",
     "tabla_ghe.raw",
-    "tabla_tee.raw"
+    "tabla_tee.raw",
+    "tabla_tak.raw"
   };
 
 Drummer :: Drummer( void ) : Instrmnt()
@@ -84,9 +85,11 @@ void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude, StkFloat freque
       }
       waves_[iWave].reset();
       // Resonance (0.0 - 1.0) controls the filter damping.
-      // 1.0 = Bright/Resonant, 0.0 = Damped/Muted.
-      filters_[iWave].setPole( 0.999 - (amplitude * resonance * 0.6) );
-      filters_[iWave].setGain( amplitude );
+      // 1.0 = Bright/Resonant (long decay), 0.0 = Damped/Muted (short decay).
+      filters_[iWave].setPole( 0.999 - (amplitude * (1.0 - resonance) * 0.5) );
+      // Normalize Tabla gain: samples are ~12dB below rock kit level.
+      StkFloat gain = (sampleIndex >= 11) ? amplitude * 4.0 : amplitude;
+      filters_[iWave].setGain( gain );
       break;
     }
   }
@@ -109,8 +112,10 @@ void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude, StkFloat freque
     soundNumber_[iWave] = sampleIndex;
 
     waves_[iWave].openFile( (Stk::rawwavePath() + waveNames[ sampleIndex ]).c_str(), true );
-    filters_[iWave].setPole( 0.999 - (amplitude * resonance * 0.6) );
-    filters_[iWave].setGain( amplitude );
+    filters_[iWave].setPole( 0.999 - (amplitude * (1.0 - resonance) * 0.5) );
+    // Normalize Tabla gain: samples are ~12dB below rock kit level.
+    StkFloat gain = (sampleIndex >= 11) ? amplitude * 4.0 : amplitude;
+    filters_[iWave].setGain( gain );
   }
 
   // Set the playback rate based on requested frequency.
@@ -122,8 +127,13 @@ void Drummer :: noteOn( StkFloat instrument, StkFloat amplitude, StkFloat freque
   if (sampleIndex == 11) baseFreq = 261.63; // Tabla Na (Dayan) - C4
   if (sampleIndex == 12) baseFreq = 130.81; // Tabla Ghe (Bayan) - C3
   if (sampleIndex == 13) baseFreq = 261.63; // Tabla Tee (Dayan) - C4
+  if (sampleIndex == 14) baseFreq = 130.81; // Tabla Tak (Bayan) - C3
 
-  StkFloat rate = (frequency / baseFreq) * pitch_ * (22050.0 / Stk::sampleRate());
+  // All STK rawwave files (including Tabla) are encoded at 22050 Hz.
+  // Using 44100 here caused 2x playback speed (a click/artifact instead of a drum hit).
+  StkFloat fileRate = 22050.0;
+
+  StkFloat rate = (frequency / baseFreq) * pitch_ * (fileRate / Stk::sampleRate());
   waves_[iWave].setRate( rate );
 }
 

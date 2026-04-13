@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 0.7.0
+
+* **Authentic Tabla Timbre Calibration**: Fully restored Tabla percussion quality by replacing legacy vocal-sounding artifacts with high-fidelity synthetic physical models.
+    * **Engine Fix**: Corrected sample rate mismatch (removed 2x speed "click" glitch).
+    * **Volume Normalization**: Added internal gain compensation (+12dB) to align Tabla levels with the rock kit.
+    * **Resonance Logic**: Re-mapped damping poles to support expressive "open" vs "muted" strokes.
+    * **New Stroke**: Added **Tabla Tak** (Bayan muted stroke) for a crisp, percussive accompaniment.
+    * **UI Improvement**: Renamed "Tabla Din" pad to "Tabla Ghe" for accurate stroke mapping.
+
 ## 0.6.0
 
 * **Indian Percussion Support**: Added **Tabla** instruments (Dayan and Bayan) to the `Drummer` kit.

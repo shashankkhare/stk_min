@@ -410,7 +410,7 @@ class _DrummerSectionState extends State<DrummerSection> {
     DrumPad(name: "Cowbell", index: 9, midiNote: 56, color: Colors.teal),
     DrumPad(name: "Tambourine", index: 10, midiNote: 54, color: Colors.cyan),
     DrumPad(name: "Tabla Na", index: 11, midiNote: 60, color: Colors.orange.shade700), // Dayan
-    DrumPad(name: "Tabla Din", index: 12, midiNote: 48, color: Colors.brown), // Bayan
+    DrumPad(name: "Tabla Ghe", index: 12, midiNote: 48, color: Colors.brown), // Bayan (tabla_ghe.raw)
     DrumPad(name: "Tabla Tee", index: 13, midiNote: 60, color: Colors.orange.shade300), // Dayan Mute
     DrumPad(name: "Dope", index: 0, midiNote: 24, color: Colors.black54),
   ];
@@ -529,12 +529,15 @@ class _DrummerSectionState extends State<DrummerSection> {
                 name: "Bayan",
                 color: const Color(0xFF2C3E50), // Charcoal
                 onTap: (zone) {
-                  // Outer = Resonant Ghe, Inner = Muted Ke
+                  // zone 0 = Kinar (outer rim) — open, resonant Ghe stroke
+                  // zone 1 = Maidan (mid ring) — half-damped
+                  // zone 2 = Syahi (black spot) — muted Ke stroke
                   double resonance = 1.0;
                   if (zone == 1) resonance = 0.5;
-                  if (zone == 2) resonance = 0.2;
+                  if (zone == 2) resonance = 0.1;
                   
-                  _playRaw(Drummer.tablaGhe, _bayanShruti, resonance: resonance); 
+                  final drumIndex = (zone == 2) ? Drummer.tablaTak : Drummer.tablaGhe;
+                  _playRaw(drumIndex, _bayanShruti, resonance: resonance); 
                 },
               ),
               // Dayan (Right / Treble) - Saffron/Bright
@@ -543,9 +546,12 @@ class _DrummerSectionState extends State<DrummerSection> {
                 name: "Dayan",
                 color: const Color(0xFFE67E22), // Saffron Orange
                 onTap: (zone) {
-                  if (zone == 0) _playRaw(Drummer.tablaNa, 1.0, resonance: 1.0); // Kinar (Sa)
-                  if (zone == 1) _playRaw(Drummer.tablaNa, 1.5, resonance: 0.6); // Maidan (higher/muffled)
-                  if (zone == 2) _playRaw(Drummer.tablaTee, 1.0, resonance: 0.1); // Syahi (Mute)
+                  // zone 0 = Kinar (outer rim) — open Na stroke (most resonant)
+                  // zone 1 = Maidan (mid ring) — semi-open Na stroke
+                  // zone 2 = Syahi (black spot) — Tee, fully muted
+                  if (zone == 0) _playRaw(Drummer.tablaNa, 1.0, resonance: 1.0);  // Na: open ring
+                  if (zone == 1) _playRaw(Drummer.tablaNa, 1.5, resonance: 0.5);  // Na: semi-muffled
+                  if (zone == 2) _playRaw(Drummer.tablaTee, 1.0, resonance: 0.0); // Tee: dead stroke
                 },
               ),
             ],

@@ -25,6 +25,7 @@ class Drummer {
   static const int tablaNa = 11;
   static const int tablaGhe = 12;
   static const int tablaTee = 13;
+  static const int tablaTak = 14;
 
   Drummer() {
     if (Platform.isAndroid) {
